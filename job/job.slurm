@@ -1,8 +1,8 @@
 #!/bin/sh
 
-#SBATCH --job-name=GPU-Shared
-#SBATCH --error=myjob.err
-#SBATCH --output=myjob.out
+#SBATCH --job-name=bert-rep
+#SBATCH --error=job.err
+#SBATCH --output=job.out
 #SBATCH --partition=allgroups
 #SBATCH --ntasks=1
 #SBATCH --mem=12G
