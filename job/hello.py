@@ -1,5 +1,5 @@
 # Import
-
+"""
 import pandas as pd
 import torch
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
@@ -213,3 +213,5 @@ for epoch_i in range(0, epochs):
 
 # Save model
 torch.save(model.state_dict(), 'bert.pt')
+"""
+print('hello world')
