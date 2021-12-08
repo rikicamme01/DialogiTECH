@@ -7,7 +7,7 @@
 #SBATCH --ntasks=1
 #SBATCH --mem=12G
 #SBATCH --time=01:00:00
-#SBATCH --constraint=dellcuda1
+#SBATCH --constraint=dellcuda0
 #SBATCH --gres=mps:1
 
 SHAREDIR="/conf/shared-software/Singularity/CUDA/"
