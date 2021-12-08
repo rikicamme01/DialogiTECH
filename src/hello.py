@@ -66,7 +66,7 @@ model = AutoModelForSequenceClassification.from_pretrained("bert-base-multilingu
 
 #Torch dataset
 X_encodings = tokenizer(
-            df['Stralcio'].tolist(),
+            df['Stralcio'].tolist()[:1000],
             add_special_tokens=True,
             return_attention_mask=True,
             padding=True,
@@ -100,7 +100,7 @@ labels = [
 
 le = preprocessing.LabelEncoder()
 le.fit(labels)
-dataset = HyperionDataset(X_encodings,le.transform(df['Repertorio']))
+dataset = HyperionDataset(X_encodings,le.transform(df['Repertorio'][:1000]))
 
 train_dataset_size = int(len(dataset) * 0.7)
 val_dataset_size = int(len(dataset) * 0.1)
