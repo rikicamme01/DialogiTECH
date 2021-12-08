@@ -15,4 +15,4 @@ SHAREDIR="/conf/shared-software/Singularity/CUDA/"
 singularity exec -B \
 	    ${SHAREDIR}/driver/`hostname`:/nvdriver \
 	    ./container.sif \
-	    ./storage/RepML/job/hello.py
+	    python3 ./hello.py
