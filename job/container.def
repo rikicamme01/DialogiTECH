@@ -32,4 +32,4 @@ From: nvidia/cuda:11.2.1-cudnn8-devel-ubuntu20.04
     # which are useless now.
     rm -rf /var/lib/apt/lists/*
     # Install Python modules.
-    pip3 install torch matplotlib tensorflow numpy==1.19.2
+    pip3 install torch matplotlib tensorflow numpy==1.19.2 torchmetric pandas sklearn transformers
