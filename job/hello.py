@@ -1,5 +1,7 @@
-# Import
+#!/usr/bin/env python3
 """
+# Import
+
 import pandas as pd
 import torch
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
