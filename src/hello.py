@@ -428,3 +428,5 @@ print("  Test Loss: {0:.2f}".format(avg_test_loss))
 print("  Test took: {:}".format(test_time))
 
 torch.save(model.state_dict(), './')
+
+run.stop()
