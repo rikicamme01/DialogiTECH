@@ -151,7 +151,7 @@ metric_collection = torchmetrics.MetricCollection({
 
 # Hyperparameters
 learning_rate = 1e-5
-batch_size = 64
+batch_size = 32
 n_epochs = 3
 
 params_info = {
