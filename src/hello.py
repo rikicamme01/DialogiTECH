@@ -29,7 +29,7 @@ def fill_null_features(df):
                         break
     return df
 
-df = pd.read_csv('../data/Original_csv/Hyperion.csv', na_filter=False)
+df = pd.read_csv('./RepML/data/Original_csv/Hyperion.csv', na_filter=False)
 df = fill_null_features(df)
 filter = df["Repertorio"] != ""
 df = df[filter]
