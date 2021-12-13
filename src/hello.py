@@ -128,25 +128,25 @@ def format_time(elapsed):
 # Metrics initialization
 metric_collection = torchmetrics.MetricCollection({
 
-    'accuracy_micro' : torchmetrics.Accuracy(num_classes=3, multiclass=True, average='micro'),
-    'accuracy_macro' : torchmetrics.Accuracy(num_classes=3, multiclass=True, average='macro'),
-    'accuracy_weighted' : torchmetrics.Accuracy(num_classes=3, multiclass=True, average='weighted'),
-    'accuracy_none' : torchmetrics.Accuracy(num_classes=3, multiclass=True, average='none'),
+    'accuracy_micro' : torchmetrics.Accuracy(num_classes=23, multiclass=True, average='micro'),
+    'accuracy_macro' : torchmetrics.Accuracy(num_classes=23, multiclass=True, average='macro'),
+    'accuracy_weighted' : torchmetrics.Accuracy(num_classes=23, multiclass=True, average='weighted'),
+    'accuracy_none' : torchmetrics.Accuracy(num_classes=23, multiclass=True, average='none'),
 
-    'f1_micro' : torchmetrics.F1(num_classes=3, multiclass=True, average='micro'),
-    'f1_macro' : torchmetrics.F1(num_classes=3, multiclass=True, average='macro'),
-    'f1_weighted' : torchmetrics.F1(num_classes=3, multiclass=True, average='weighted'),
-    'f1_none' : torchmetrics.F1(num_classes=3, multiclass=True, average='none'),
+    'f1_micro' : torchmetrics.F1(num_classes=23, multiclass=True, average='micro'),
+    'f1_macro' : torchmetrics.F1(num_classes=23, multiclass=True, average='macro'),
+    'f1_weighted' : torchmetrics.F1(num_classes=23, multiclass=True, average='weighted'),
+    'f1_none' : torchmetrics.F1(num_classes=23, multiclass=True, average='none'),
 
-    'precision_micro' : torchmetrics.Precision(num_classes=3, multiclass=True, average='micro'),
-    'precision_macro' : torchmetrics.Precision(num_classes=3, multiclass=True, average='macro'),
-    'precision_weighted' : torchmetrics.Precision(num_classes=3, multiclass=True, average='weighted'),
-    'precision_none' : torchmetrics.Precision(num_classes=3, multiclass=True, average='none'),
+    'precision_micro' : torchmetrics.Precision(num_classes=23, multiclass=True, average='micro'),
+    'precision_macro' : torchmetrics.Precision(num_classes=23, multiclass=True, average='macro'),
+    'precision_weighted' : torchmetrics.Precision(num_classes=23, multiclass=True, average='weighted'),
+    'precision_none' : torchmetrics.Precision(num_classes=23, multiclass=True, average='none'),
 
-    'recall_micro' : torchmetrics.Recall(num_classes=3, multiclass=True, average='micro'),
-    'recall_macro' : torchmetrics.Recall(num_classes=3, multiclass=True, average='macro'),
-    'recall_weighted' : torchmetrics.Recall(num_classes=3, multiclass=True, average='weighted'),
-    'recall_none' : torchmetrics.Recall(num_classes=3, multiclass=True, average='none')
+    'recall_micro' : torchmetrics.Recall(num_classes=23, multiclass=True, average='micro'),
+    'recall_macro' : torchmetrics.Recall(num_classes=23, multiclass=True, average='macro'),
+    'recall_weighted' : torchmetrics.Recall(num_classes=23, multiclass=True, average='weighted'),
+    'recall_none' : torchmetrics.Recall(num_classes=23, multiclass=True, average='none')
 })
 
 # Hyperparameters
