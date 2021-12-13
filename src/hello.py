@@ -161,7 +161,7 @@ params_info = {
 }
 run['params'] = params_info
 
-
+torch.cuda.empty_cache()
 #----------TRAINING
 
 # Measure the total training time for the whole run.
