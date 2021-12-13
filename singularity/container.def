@@ -31,4 +31,4 @@ From: nvidia/cuda:11.0.3-cudnn8-devel-ubuntu20.04
     # which are useless now.
     rm -rf /var/lib/apt/lists/*
     # Install Python modules.
-    pip3 install torch matplotlib numpy==1.19.2 pandas torchmetrics neptune-client transformers sklearn
+    pip3 install torch matplotlib numpy==1.19.2 pandas torchmetrics neptune-client transformers skrm learn
