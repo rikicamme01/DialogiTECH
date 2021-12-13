@@ -92,7 +92,7 @@ labels = [
     'ridimensionamento',
     'sancire',
     'specificazione',
-    'salutazione']
+    'valutazione']
 
 le = preprocessing.LabelEncoder()
 le.fit(labels)
