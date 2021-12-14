@@ -41,6 +41,41 @@ df = df.applymap(str.lower)
 df['Repertorio'].replace('implicazioni','implicazione', inplace=True)
 df['Repertorio'].replace('previsioni','previsione', inplace=True)
 
+# split
+test_set_perc = 0.2
+val_set_perc = 0.1
+
+gb = df.groupby('Repertorio')
+train_list = []
+test_list = []
+val_list = []
+
+for x in gb.groups:
+    class_df = gb.get_group(x)
+
+    # Test set creation
+    test = class_df.sample(frac=test_set_perc, random_state=1464)
+    train = pd.concat([class_df,test]).drop_duplicates(keep=False)
+
+    # Validation set creation
+    val = class_df.sample(frac=val_set_perc)
+    train = pd.concat([train,val]).drop_duplicates(keep=False)
+
+    train_list.append(train)
+    test_list.append(test)
+    val_list.append(val)
+
+train_df = pd.concat(train_list)
+test_df = pd.concat(test_list)
+val_df = pd.concat(val_list)
+
+dataset_info = {
+    'training_set_size' : 1 - test_set_perc,
+    'validation_set_size' : val_set_perc,
+    'test_set_size' : test_set_perc
+}
+run['dataset'] = dataset_info
+
 # dataset subclass definition
 class HyperionDataset(torch.utils.data.Dataset):
     def __init__(self, encodings, labels):
@@ -60,14 +95,30 @@ class HyperionDataset(torch.utils.data.Dataset):
 tokenizer = AutoTokenizer.from_pretrained("bert-base-multilingual-uncased")
 model = AutoModelForSequenceClassification.from_pretrained("bert-base-multilingual-uncased", num_labels=23)
 run['model'] = "bert-base-multilingual-uncased"
+
 #Dataset  creation
-X_encodings = tokenizer(
-            df['Stralcio'].tolist(),
+training_encodings = tokenizer(
+            train_df['Stralcio'].tolist(),
             add_special_tokens=True,
             return_attention_mask=True,
             padding=True,
             truncation=True
         )
+test_encodings = tokenizer(
+            test_df['Stralcio'].tolist(),
+            add_special_tokens=True,
+            return_attention_mask=True,
+            padding=True,
+            truncation=True
+)
+val_encodings = tokenizer(
+            val_df['Stralcio'].tolist(),
+            add_special_tokens=True,
+            return_attention_mask=True,
+            padding=True,
+            truncation=True
+)
+
 
 labels = [
     'anticipazione',
@@ -96,24 +147,11 @@ labels = [
 
 le = preprocessing.LabelEncoder()
 le.fit(labels)
-dataset = HyperionDataset(X_encodings,le.transform(df['Repertorio']))
 
-#Split dataset
-train_set_perc = 0.7
-val_set_perc = 0.1
-test_set_perc = 0.2
+train_dataset = HyperionDataset(training_encodings,le.transform(train_df['Repertorio']))
+test_dataset = HyperionDataset(test_encodings,le.transform(test_df['Repertorio']))
+val_dataset = HyperionDataset(test_encodings,le.transform(val_df['Repertorio']))
 
-dataset_info = {
-    'training_set_size' : train_set_perc,
-    'validation_set_size' : val_set_perc,
-    'test_set_size' : test_set_perc
-}
-run['dataset'] = dataset_info
-
-train_dataset_size = int(len(dataset) * train_set_perc)
-val_dataset_size = int(len(dataset) * val_set_perc)
-test_dataset_size = len(dataset) - train_dataset_size - val_dataset_size # 0.2
-train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(dataset, [train_dataset_size, val_dataset_size, test_dataset_size])
 
 def format_time(elapsed):
     '''
