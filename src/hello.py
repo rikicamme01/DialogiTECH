@@ -20,6 +20,9 @@ learning_rate = 1e-5
 batch_size = int(sys.argv[1])
 n_epochs = int(sys.argv[2])
 
+# Test CUDA
+print(torch.rand(1, device="cuda"))
+
 
 #Neptune initialization
 run = neptune.init(
