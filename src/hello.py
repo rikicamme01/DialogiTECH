@@ -17,8 +17,8 @@ if len(sys.argv) != 3:
 
 # Hyperparameters
 learning_rate = 1e-5
-batch_size = sys.argv[1]
-n_epochs = sys.argv[2]
+batch_size = int(sys.argv[1])
+n_epochs = int(sys.argv[2])
 
 
 #Neptune initialization
