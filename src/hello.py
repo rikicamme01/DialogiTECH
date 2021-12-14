@@ -59,7 +59,7 @@ class HyperionDataset(torch.utils.data.Dataset):
 #Import model 
 tokenizer = AutoTokenizer.from_pretrained("bert-base-multilingual-uncased")
 model = AutoModelForSequenceClassification.from_pretrained("bert-base-multilingual-uncased", num_labels=23)
-
+run['model'] = "bert-base-multilingual-uncased"
 #Dataset  creation
 X_encodings = tokenizer(
             df['Stralcio'].tolist(),
@@ -152,7 +152,7 @@ metric_collection = torchmetrics.MetricCollection({
 # Hyperparameters
 learning_rate = 1e-5
 batch_size = 32
-n_epochs = 3
+n_epochs = 4
 
 params_info = {
     'learning_rate' : learning_rate,
