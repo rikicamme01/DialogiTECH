@@ -9,6 +9,17 @@ import  torchmetrics
 from torch.utils.data import DataLoader
 from transformers import  AdamW
 import numpy as np
+import sys
+
+if len(sys.argv) != 3:
+    print("Usage:", sys.argv[0], "batch_size n_epochs")
+    sys.exit(1)
+
+# Hyperparameters
+learning_rate = 1e-5
+batch_size = sys.argv[1]
+n_epochs = sys.argv[2]
+
 
 #Neptune initialization
 run = neptune.init(
@@ -187,10 +198,7 @@ metric_collection = torchmetrics.MetricCollection({
     'recall_none' : torchmetrics.Recall(num_classes=23, multiclass=True, average='none')
 })
 
-# Hyperparameters
-learning_rate = 1e-5
-batch_size = 32
-n_epochs = 4
+
 
 params_info = {
     'learning_rate' : learning_rate,
