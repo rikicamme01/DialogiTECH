@@ -72,7 +72,7 @@ for x in gb.groups:
     train = pd.concat([class_df,test]).drop_duplicates(keep=False)
 
     # Validation set creation
-    val = class_df.sample(frac=val_set_perc)
+    val = train.sample(frac=val_set_perc)
     train = pd.concat([train,val]).drop_duplicates(keep=False)
 
     train_list.append(train)
