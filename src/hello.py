@@ -164,7 +164,7 @@ le.fit(labels)
 
 train_dataset = HyperionDataset(training_encodings,le.transform(train_df['Repertorio']))
 test_dataset = HyperionDataset(test_encodings,le.transform(test_df['Repertorio']))
-val_dataset = HyperionDataset(test_encodings,le.transform(val_df['Repertorio']))
+val_dataset = HyperionDataset(val_encodings,le.transform(val_df['Repertorio']))
 
 
 def format_time(elapsed):
@@ -409,7 +409,7 @@ print("Total training took {:} (h:mm:ss)".format(format_time(time.time()-total_t
 test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=True)
 
 print("")
-print("Running Tets...")
+print("Running Test...")
 
 metric_collection.reset()
 t0 = time.time()
