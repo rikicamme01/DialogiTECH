@@ -314,7 +314,7 @@ for epoch_i in range(0, epochs):
         logits = logits.detach().cpu()
         label_ids = b_labels.to('cpu')
 
-        batch_metric = metric_collection.update(logits.softmax(dim=1), label_ids)
+        batch_metric = metric_collection.update(logits, label_ids)
         #print(batch_metric)
 
         # Perform a backward pass to compute the gradients in MIXED precision
