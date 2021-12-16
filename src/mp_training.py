@@ -41,7 +41,7 @@ def seed_everything(seed=1464):
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
     torch.backends.cudnn.deterministic = True
-#seed_everything()
+seed_everything()
 
 
 # Dataset loading and preprocessing
@@ -433,8 +433,6 @@ print("Total training took {:} (h:mm:ss)".format(format_time(time.time()-total_t
 # the validation set.
 
 test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
-test_dataloader1 = DataLoader(test_dataset, batch_size=8, shuffle=True)
-test_dataloader2 = DataLoader(test_dataset, batch_size=1, shuffle=True)
 
 print("")
 print("Running Test...")
@@ -505,146 +503,5 @@ print("  Test Loss: {0:.2f}".format(avg_test_loss))
 print("  Test took: {:}".format(test_time))
 
 #torch.save(model.state_dict(), './')
-
-
-
-print("")
-print("Running Test...")
-
-metric_collection.reset()
-t0 = time.time()
-
-# Put the model in evaluation mode: the dropout layers behave differently
-model.eval()
-
-total_test_loss = 0
-
-# Evaluate data for one epoch
-for batch in test_dataloader:
-    
-    # Unpack this training batch from our dataloader. 
-    #
-    # copy each tensor to the GPU using the 'to()' method
-    #
-    # 'batch' contains three pytorch tensors:
-    #   [0]: input ids 
-    #   [1]: attention masks
-    #   [2]: labels 
-    b_input_ids = batch['input_ids'].to(device)
-    b_input_mask = batch['attention_mask'].to(device)
-    b_labels = batch['labels'].to(device)
-    
-    # Tell pytorch not to bother with constructing the compute graph during
-    # the forward pass, since this is only needed for training.
-    with torch.no_grad():        
-
-        # Forward pass, calculate logits
-        # argmax(logits) = argmax(Softmax(logits))
-        outputs = model(b_input_ids, 
-                                attention_mask=b_input_mask,
-                                labels=b_labels)
-        loss = outputs[0]
-        logits = outputs[1]
-        
-    # Accumulate the validation loss.
-    total_test_loss += loss.item()
-
-    # Move logits and labels to CPU
-    logits = logits.detach().cpu()
-    label_ids = b_labels.to('cpu')
-
-    # metric on current batch
-
-    batch_metric = metric_collection.update(logits.softmax(dim=1), label_ids)
-
-# Report the final metrics for this validation phase.
-# metric on all batches using custom accumulation from torchmetrics library
-
-test_metrics = metric_collection.compute()
-print(' Test metrics: ')
-print(final_metrics)
-
-
-# Compute the average loss over all of the batches.
-avg_test_loss = total_test_loss / len(test_dataloader)
-
-
-# Measure how long the validation run took.
-test_time = format_time(time.time() - t0)
-
-print("  Test Loss: {0:.2f}".format(avg_test_loss))
-print("  Test took: {:}".format(test_time))
-
-
-
-
-print("")
-print("Running Test...")
-
-metric_collection.reset()
-t0 = time.time()
-
-# Put the model in evaluation mode: the dropout layers behave differently
-model.eval()
-
-total_test_loss = 0
-
-# Evaluate data for one epoch
-for batch in test_dataloader:
-    
-    # Unpack this training batch from our dataloader. 
-    #
-    # copy each tensor to the GPU using the 'to()' method
-    #
-    # 'batch' contains three pytorch tensors:
-    #   [0]: input ids 
-    #   [1]: attention masks
-    #   [2]: labels 
-    b_input_ids = batch['input_ids'].to(device)
-    b_input_mask = batch['attention_mask'].to(device)
-    b_labels = batch['labels'].to(device)
-    
-    # Tell pytorch not to bother with constructing the compute graph during
-    # the forward pass, since this is only needed for training.
-    with torch.no_grad():        
-
-        # Forward pass, calculate logits
-        # argmax(logits) = argmax(Softmax(logits))
-        outputs = model(b_input_ids, 
-                                attention_mask=b_input_mask,
-                                labels=b_labels)
-        loss = outputs[0]
-        logits = outputs[1]
-        
-    # Accumulate the validation loss.
-    total_test_loss += loss.item()
-
-    # Move logits and labels to CPU
-    logits = logits.detach().cpu()
-    label_ids = b_labels.to('cpu')
-
-    # metric on current batch
-
-    batch_metric = metric_collection.update(logits.softmax(dim=1), label_ids)
-
-# Report the final metrics for this validation phase.
-# metric on all batches using custom accumulation from torchmetrics library
-
-test_metrics = metric_collection.compute()
-print(' Test metrics: ')
-print(final_metrics)
-
-
-# Compute the average loss over all of the batches.
-avg_test_loss = total_test_loss / len(test_dataloader)
-
-
-
-# Measure how long the validation run took.
-test_time = format_time(time.time() - t0)
-
-print("  Test Loss: {0:.2f}".format(avg_test_loss))
-print("  Test took: {:}".format(test_time))
-
 
 run.stop()
