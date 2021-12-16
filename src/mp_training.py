@@ -324,6 +324,9 @@ for epoch_i in range(0, epochs):
         # calculate the average loss at the end.
         total_train_loss += loss.item()
 
+        # Unscales the gradients of optimizer's assigned params in-place before the gradient clipping
+        scaler.unscale_(optimizer)
+
         # Clip the norm of the gradients to 1.0.
         # This helps and prevent the "exploding gradients" problem.
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
