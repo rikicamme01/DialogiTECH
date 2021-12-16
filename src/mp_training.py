@@ -432,7 +432,7 @@ print("Total training took {:} (h:mm:ss)".format(format_time(time.time()-total_t
 # Measure performance on
 # the validation set.
 
-test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=True)
+test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
 
 print("")
 print("Running Test...")
