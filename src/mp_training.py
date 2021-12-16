@@ -239,6 +239,9 @@ validation_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=T
 #Adam algorithm optimized for tranfor architectures
 optimizer = AdamW(model.parameters(), lr=learning_rate)
 
+# Scaler for mixed precision
+scaler = torch.cuda.amp.GradScaler()
+
 # Setup for training with gpu
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 model.to(device)
@@ -290,21 +293,22 @@ for epoch_i in range(0, epochs):
 
         # clear any previously calculated gradients before performing a
         # backward pass
-        model.zero_grad()        
+        model.zero_grad()  
 
-        # Perform a forward pass (evaluate the model on this training batch).
-        # This will return the loss (rather than the model output) because we
-        # have provided the `labels`.
-        outputs = model(b_input_ids, 
+
+        # Perform a forward pass in mixed precision
+        with torch.cuda.amp.autocast():
+            outputs = model(b_input_ids, 
                              attention_mask=b_input_mask, 
                              labels=b_labels)
         
         loss = outputs[0]
         logits = outputs[1]
 
-        # Accumulate the training loss over all of the batches so that we can
-        # calculate the average loss at the end.
-        total_train_loss += loss.item()
+        
+
+
+        
 
         # Move logits and labels to CPU
         logits = logits.detach().cpu()
@@ -313,15 +317,20 @@ for epoch_i in range(0, epochs):
         batch_metric = metric_collection.update(logits.softmax(dim=1), label_ids)
         #print(batch_metric)
 
-        # Perform a backward pass to compute the gradients.
-        loss.backward()
+        # Perform a backward pass to compute the gradients in MIXED precision
+        scaler.scale(loss).backward()
+
+        # Accumulate the training loss over all of the batches so that we can
+        # calculate the average loss at the end.
+        total_train_loss += loss.item()
 
         # Clip the norm of the gradients to 1.0.
         # This helps and prevent the "exploding gradients" problem.
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
 
-        # Update parameters and take a step using the computed gradient
-        optimizer.step()
+        # Update parameters and take a step using the computed gradient in MIXED precision
+        scaler.step(optimizer)
+        scaler.update()
 
 
     # Compute the average loss over all of the batches.
