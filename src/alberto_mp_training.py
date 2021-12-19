@@ -3,6 +3,8 @@ import neptune.new as neptune
 import torch
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from sklearn import preprocessing
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import ConfusionMatrixDisplay
 import time
 import datetime
 import  torchmetrics
@@ -446,6 +448,9 @@ print("Running Test...")
 metric_collection.reset()
 t0 = time.time()
 
+# Save prediction for confusion matrix
+pred = []
+
 # Put the model in evaluation mode: the dropout layers behave differently
 model.eval()
 
@@ -485,9 +490,12 @@ for batch in test_dataloader:
     logits = logits.detach().cpu()
     label_ids = b_labels.to('cpu')
 
+    batch_pred = logits.softmax(dim=1)
+    pred += batch_pred.argmax(dim=1)
+
     # metric on current batch
 
-    batch_metric = metric_collection.update(logits.softmax(dim=1), label_ids)
+    batch_metric = metric_collection.update(batch_pred, label_ids)
 
 # Report the final metrics for this validation phase.
 # metric on all batches using custom accumulation from torchmetrics library
@@ -509,5 +517,13 @@ print("  Test Loss: {0:.2f}".format(avg_test_loss))
 print("  Test took: {:}".format(test_time))
 
 #torch.save(model.state_dict(), './')
+
+encoded_labels = le.transform(labels)
+y_true = test_dataset[:]['labels']
+cm = confusion_matrix(y_true, pred, encoded_labels)
+disp = ConfusionMatrixDisplay(cm, display_labels=labels)
+disp.plot(cmap="Blues", values_format='',xticks_rotation='vertical')
+
+run["confusion_matrix"].upload(neptune.types.File.as_image(disp.figure_))
 
 run.stop()
