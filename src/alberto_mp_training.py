@@ -520,7 +520,7 @@ print("  Test took: {:}".format(test_time))
 
 encoded_labels = le.transform(labels)
 y_true = test_dataset[:]['labels']
-cm = confusion_matrix(y_true, pred, encoded_labels)
+cm = confusion_matrix(y_true, pred)
 disp = ConfusionMatrixDisplay(cm, display_labels=labels)
 disp.plot(cmap="Blues", values_format='',xticks_rotation='vertical')
 
