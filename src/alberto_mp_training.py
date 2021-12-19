@@ -145,7 +145,7 @@ test_encodings = tokenizer(
 )
 val_encodings = tokenizer(
             val_df['Stralcio'].tolist(),
-            #val_df['Domanda'].tolist(),
+            val_df['Domanda'].tolist(),
             max_length=512,
             add_special_tokens=True,
             return_attention_mask=True,
