@@ -124,15 +124,16 @@ class HyperionDataset(torch.utils.data.Dataset):
     def __len__(self):
         return len(self.labels)
 
-#Import model 
-tokenizer = AutoTokenizer.from_pretrained("m-polignano-uniba/bert_uncased_L-12_H-768_A-12_italian_alb3rt0")
-model = AutoModelForSequenceClassification.from_pretrained("m-polignano-uniba/bert_uncased_L-12_H-768_A-12_italian_alb3rt0", num_labels=23)
-run['model'] = "bert-base-multilingual-uncased"
+#Import model
+model_string = "m-polignano-uniba/bert_uncased_L-12_H-768_A-12_italian_alb3rt0"
+tokenizer = AutoTokenizer.from_pretrained(model_string)
+model = AutoModelForSequenceClassification.from_pretrained(model_string, num_labels=23)
+run['model'] = model_string
 
 #Dataset  creation
 training_encodings = tokenizer(
             train_df['Stralcio'].tolist(),
-            train_df['Domanda'].tolist(),
+            #train_df['Domanda'].tolist(),
             max_length=512,
             add_special_tokens=True,
             return_attention_mask=True,
@@ -141,7 +142,7 @@ training_encodings = tokenizer(
         )
 test_encodings = tokenizer(
             test_df['Stralcio'].tolist(),
-            test_df['Domanda'].tolist(),
+            #test_df['Domanda'].tolist(),
             max_length=512,
             add_special_tokens=True,
             return_attention_mask=True,
@@ -150,7 +151,7 @@ test_encodings = tokenizer(
 )
 val_encodings = tokenizer(
             val_df['Stralcio'].tolist(),
-            val_df['Domanda'].tolist(),
+            #val_df['Domanda'].tolist(),
             max_length=512,
             add_special_tokens=True,
             return_attention_mask=True,
@@ -524,7 +525,7 @@ print("  Test took: {:}".format(test_time))
 encoded_labels = le.transform(labels)
 y_true = test_dataset[:]['labels']
 fig, ax = plt.subplots(figsize=(20, 20))
-disp = ConfusionMatrixDisplay.from_predictions(y_true, pred, display_labels=labels, normalize='true', values_format='.2g')
+disp = ConfusionMatrixDisplay.from_predictions(y_true, pred, display_labels=labels, normalize='true', values_format='.2d')
 disp.plot(cmap="Blues", values_format='.2g',xticks_rotation='vertical', ax=ax)
 
 run["confusion_matrix"].upload(neptune.types.File.as_image(disp.figure_))
