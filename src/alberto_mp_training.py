@@ -83,7 +83,7 @@ val_list = []
 
 
 for x in gb.groups:
-    class_df = gb.get_group(x).head(500)
+    class_df = gb.get_group(x)
 
     # Test set creation
     test = class_df.sample(frac=test_set_perc, random_state=1464)
@@ -132,7 +132,7 @@ run['model'] = "bert-base-multilingual-uncased"
 #Dataset  creation
 training_encodings = tokenizer(
             train_df['Stralcio'].tolist(),
-            #train_df['Domanda'].tolist(),
+            train_df['Domanda'].tolist(),
             max_length=512,
             add_special_tokens=True,
             return_attention_mask=True,
@@ -141,7 +141,7 @@ training_encodings = tokenizer(
         )
 test_encodings = tokenizer(
             test_df['Stralcio'].tolist(),
-            #test_df['Domanda'].tolist(),
+            test_df['Domanda'].tolist(),
             max_length=512,
             add_special_tokens=True,
             return_attention_mask=True,
@@ -150,7 +150,7 @@ test_encodings = tokenizer(
 )
 val_encodings = tokenizer(
             val_df['Stralcio'].tolist(),
-            #val_df['Domanda'].tolist(),
+            val_df['Domanda'].tolist(),
             max_length=512,
             add_special_tokens=True,
             return_attention_mask=True,
