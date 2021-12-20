@@ -81,6 +81,8 @@ train_list = []
 test_list = []
 val_list = []
 
+max_elements_per_class= 1000
+
 for x in gb.groups:
     class_df = gb.get_group(x)
 
@@ -92,7 +94,7 @@ for x in gb.groups:
     val = train.sample(frac=val_set_perc)
     train = pd.concat([train,val]).drop_duplicates(keep=False)
 
-    train_list.append(train)
+    train_list.append(train.head(1000))
     test_list.append(test)
     val_list.append(val)
 
@@ -103,7 +105,7 @@ val_df = pd.concat(val_list)
 dataset_info = {
     'training_set_size' : 1 - test_set_perc,
     'validation_set_size' : val_set_perc,
-    'test_set_size' : test_set_perc
+    'test_set_size' : test_set_perc,
 }
 run['dataset'] = dataset_info
 
