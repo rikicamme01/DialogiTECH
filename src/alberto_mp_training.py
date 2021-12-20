@@ -14,6 +14,7 @@ import numpy as np
 import sys
 import random
 import os
+from matplotlib import pyplot as plt
 
 if len(sys.argv) != 3:
     print("Usage:", sys.argv[0], "batch_size n_epochs")
@@ -520,9 +521,9 @@ print("  Test took: {:}".format(test_time))
 
 encoded_labels = le.transform(labels)
 y_true = test_dataset[:]['labels']
-cm = confusion_matrix(y_true, pred)
+fig, ax = plt.subplots(figsize=(20, 20))
 disp = ConfusionMatrixDisplay.from_predictions(y_true, pred, display_labels=labels, normalize='true', values_format='0.2g', colorbar=False)
-disp.plot(cmap="Blues", values_format='',xticks_rotation='vertical')
+disp.plot(cmap="Blues", values_format='',xticks_rotation='vertical', ax=ax)
 
 run["confusion_matrix"].upload(neptune.types.File.as_image(disp.figure_))
 
