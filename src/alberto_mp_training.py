@@ -525,7 +525,7 @@ print("  Test took: {:}".format(test_time))
 encoded_labels = le.transform(labels)
 y_true = test_dataset[:]['labels']
 fig, ax = plt.subplots(figsize=(20, 20))
-disp = ConfusionMatrixDisplay.from_predictions(y_true, pred, display_labels=labels, normalize='true', values_format='.2d')
+disp = ConfusionMatrixDisplay.from_predictions(y_true, pred, display_labels=labels, normalize='true', values_format='.2f')
 disp.plot(cmap="Blues", values_format='.2g',xticks_rotation='vertical', ax=ax)
 
 run["confusion_matrix"].upload(neptune.types.File.as_image(disp.figure_))
