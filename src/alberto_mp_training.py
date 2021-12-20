@@ -73,7 +73,7 @@ df['Repertorio'].replace('implicazioni','implicazione', inplace=True)
 df['Repertorio'].replace('previsioni','previsione', inplace=True)
 
 # split
-test_set_perc = 0.2
+test_set_perc = 0.3
 val_set_perc = 0.1
 
 gb = df.groupby('Repertorio')
