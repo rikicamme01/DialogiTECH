@@ -93,7 +93,8 @@ for x in gb.groups:
     val = train.sample(frac=val_set_perc)
     train = pd.concat([train,val]).drop_duplicates(keep=False)
 
-    train_list.append(train.head(500))
+    #train_list.append(train.head(500))
+    train_list.append(train)
     test_list.append(test)
     val_list.append(val)
 
@@ -442,7 +443,7 @@ print("Total training took {:} (h:mm:ss)".format(format_time(time.time()-total_t
 # Measure performance on
 # the validation set.
 
-test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
+test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
 print("")
 print("Running Test...")
