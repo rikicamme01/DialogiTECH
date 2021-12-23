@@ -1,7 +1,7 @@
-import torch
 import pandas as pd
-from transformers import AutoTokenizer
+import torch
 from sklearn import preprocessing
+from transformers import AutoTokenizer
 
 LABELS = [
             'anticipazione',
@@ -36,11 +36,14 @@ class HyperionDataset(torch.utils.data.Dataset):
         df = to_lower_case(df)
         uniform_labels(df)          
         tokenizer = AutoTokenizer.from_pretrained(tokenizer_name) 
-        self.encodings = tokenize(df, tokenizer).items()
+        self.encodings = tokenize(df, tokenizer)
         self.labels = encode_labels(df).tolist()    
 
     def __getitem__(self, idx):
-        return self.encodings[idx], self.labels[idx]
+        item = {key: val[idx] for key, val in self.encodings.items()}
+        
+        item['labels'] = self.labels[idx]
+        return item
 
     def __len__(self):
         return len(self.labels)   
@@ -95,7 +98,7 @@ def decode_labels(encoded_labels):
     le.fit(LABELS)
     return le.inverse_transform(encoded_labels)
 
-def train_val_split(df, val_perc=0.1):
+def train_val_split(df, tok_name,  val_perc=0.1):
     gb = df.groupby('Repertorio')
     train_list = []
     val_list = []
@@ -104,8 +107,8 @@ def train_val_split(df, val_perc=0.1):
         class_df = gb.get_group(x)
 
         # Validation set creation
-        val = train.sample(frac=val_perc)
-        train = pd.concat([train,val]).drop_duplicates(keep=False)
+        val = class_df.sample(frac=val_perc)
+        train = pd.concat([class_df,val]).drop_duplicates(keep=False)
 
         #train_list.append(train.head(500))
         train_list.append(train)
@@ -113,4 +116,4 @@ def train_val_split(df, val_perc=0.1):
 
     train_df = pd.concat(train_list)
     val_df = pd.concat(val_list)
-    return HyperionDataset(train_df), HyperionDataset(val_df)
+    return HyperionDataset(train_df, tok_name), HyperionDataset(val_df, tok_name)
