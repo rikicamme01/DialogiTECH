@@ -350,7 +350,7 @@ class MPTrainer():
 
         y_true = test_dataset[:]['labels']
 
-        cm = plot_confusion_matrix(y_true, pred, test_dataset.LABELS)
+        cm = plot_confusion_matrix(y_true, pred, test_dataset.labels_list())
 
         self.logger.run["confusion_matrix"].upload(neptune.types.File.as_image(cm))
                 

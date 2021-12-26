@@ -4,32 +4,34 @@ from sklearn import preprocessing
 from transformers import AutoTokenizer
 
 LABELS = [
-            'anticipazione',
-            'causa',
-            'commento',
-            'conferma',
-            'considerazione',
-            'contrapposizione',
-            'deresponsabilizzazione',
-            'descrizione',
-            'dichiarazione di intenti',
-            'generalizzazione',
-            'giudizio',
-            'giustificazione',
-            'implicazione',
-            'non risposta',
-            'opinione',
-            'possibilità',
-            'prescrizione',
-            'previsione',
-            'proposta',
-            'ridimensionamento',
-            'sancire',
-            'specificazione',
-            'valutazione'
-    ]
+                'anticipazione',
+                'causa',
+                'commento',
+                'conferma',
+                'considerazione',
+                'contrapposizione',
+                'deresponsabilizzazione',
+                'descrizione',
+                'dichiarazione di intenti',
+                'generalizzazione',
+                'giudizio',
+                'giustificazione',
+                'implicazione',
+                'non risposta',
+                'opinione',
+                'possibilità',
+                'prescrizione',
+                'previsione',
+                'proposta',
+                'ridimensionamento',
+                'sancire',
+                'specificazione',
+                'valutazione'
+        ]
 
 class HyperionDataset(torch.utils.data.Dataset):
+    
+
     def __init__(self, df, tokenizer_name):
         #fill_null_features(df)
         df = filter_empty_labels(df)
@@ -46,7 +48,11 @@ class HyperionDataset(torch.utils.data.Dataset):
         return item
 
     def __len__(self):
-        return len(self.labels)   
+        return len(self.labels)
+    
+    def labels_list(self):
+        return LABELS
+
 
 
 # Dataset loading and preprocessing
