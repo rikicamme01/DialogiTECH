@@ -45,6 +45,7 @@ class MPTrainer():
         }) 
         
     def fit(self, model, train_dataset, val_dataset):
+        self.logger.run['model'] = model.name
         
         params_info = {
             'learning_rate' : self.learning_rate,
