@@ -1,13 +1,16 @@
 import time
 import datetime
+from torch.nn import utils
 
 import torchmetrics
 import torch
 from torch.utils.data import DataLoader
 from transformers import  AdamW
 
-from utils.utils import format_time
+from utils.utils import format_time, plot_confusion_matrix, plot_f1
+from utils.utils import plot_loss
 from loggers.neptune_logger import NeptuneLogger
+import neptune.new as neptune
 
 
 class MPTrainer():
@@ -55,6 +58,11 @@ class MPTrainer():
 
         # Measure the total training time for the whole run.
         total_t0 = time.time()
+
+        epochs_train_loss = []
+        epochs_val_loss = []
+        epochs_train_f1 = []
+        epochs_val_f1 = []
 
         epochs = self.n_epochs
 
@@ -159,9 +167,10 @@ class MPTrainer():
 
             # Compute the average loss over all of the batches.
             avg_train_loss = total_train_loss / len(train_dataloader)
+            epochs_train_loss.append(avg_train_loss)
 
             final_metrics = self.metric_collection.compute()
-            print(final_metrics)
+            epochs_train_f1.append(final_metrics['f1_weighted'])
             
             # Measure how long this epoch took.
             training_time = format_time(time.time() - t0)
@@ -228,10 +237,14 @@ class MPTrainer():
             # metric on all batches using custom accumulation from torchmetrics library
 
             final_metrics = self.metric_collection.compute()
+            epochs_val_f1.append(final_metrics['f1_weighted'])
+
+            self.logger.run['validation/' + str(epoch_i) + '/metrics'] = final_metrics
             print('VALIDATION: ')
-            print(final_metrics)
+            
             # Compute the average loss over all of the batches.
             avg_val_loss = total_val_loss / len(validation_dataloader)
+            epochs_val_loss.append(avg_val_loss)
             
             # Measure how long the validation run took.
             validation_time = format_time(time.time() - t0)
@@ -239,10 +252,106 @@ class MPTrainer():
             print("  Validation Loss: {0:.2f}".format(avg_val_loss))
             print("  Validation took: {:}".format(validation_time))
 
-
+        loss_fig = plot_loss(epochs_train_loss, epochs_val_loss)
+        f1_fig = plot_f1(epochs_train_f1, epochs_val_f1)
+        self.logger.run["loss"].upload(neptune.types.File.as_image(loss_fig))
+        self.logger.run["f1"].upload(neptune.types.File.as_image(f1_fig))
         print("")
         print("Training complete!")
 
         print("Total training took {:} (h:mm:ss)".format(format_time(time.time()-total_t0)))
+    
+    def test(self, model, test_dataset):
+        # ========================================
+        #               Test
+        # ========================================
+        # Measure performance on
+        # the validation set.
+
+        test_dataloader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=True)
+
+        # Setup for testing with gpu
+        device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+
+        print("")
+        print("Running Test...")
+
+        self.metric_collection.reset()
+        t0 = time.time()
+
+        # Save prediction for confusion matrix
+        pred = []
+
+        # Put the model in evaluation mode: the dropout layers behave differently
+        model.eval()
+
+        total_test_loss = 0
+
+        # Evaluate data for one epoch
+        for batch in test_dataloader:
+            
+            # Unpack this training batch from our dataloader. 
+            #
+            # copy each tensor to the GPU using the 'to()' method
+            #
+            # 'batch' contains three pytorch tensors:
+            #   [0]: input ids 
+            #   [1]: attention masks
+            #   [2]: labels 
+            b_input_ids = batch['input_ids'].to(device)
+            b_input_mask = batch['attention_mask'].to(device)
+            b_labels = batch['labels'].to(device)
+            
+            # Tell pytorch not to bother with constructing the compute graph during
+            # the forward pass, since this is only needed for training.
+            with torch.no_grad():        
+
+                # Forward pass, calculate logits
+                # argmax(logits) = argmax(Softmax(logits))
+                outputs = model(b_input_ids, 
+                                        attention_mask=b_input_mask,
+                                        labels=b_labels)
+                loss = outputs[0]
+                logits = outputs[1]
+                
+            # Accumulate the validation loss.
+            total_test_loss += loss.item()
+
+            # Move logits and labels to CPU
+            logits = logits.detach().cpu()
+            label_ids = b_labels.to('cpu')
+
+            batch_pred = logits.softmax(dim=1)
+            pred += batch_pred.argmax(dim=1)
+
+            # metric on current batch
+
+            batch_metric = self.metric_collection.update(batch_pred, label_ids)
+
+        # Report the final metrics for this validation phase.
+        # metric on all batches using custom accumulation from torchmetrics library
+
+        test_metrics = self.metric_collection.compute()
+        print(' Test metrics: ')
+
+        self.logger.run['test/metrics'] = test_metrics
+        # Compute the average loss over all of the batches.
+        avg_test_loss = total_test_loss / len(test_dataloader)
+
+        self.logger.run['test/loss'] = avg_test_loss
+
+        # Measure how long the validation run took.
+        test_time = format_time(time.time() - t0)
+
+        print("  Test Loss: {0:.2f}".format(avg_test_loss))
+        print("  Test took: {:}".format(test_time))
+
+        #torch.save(model.state_dict(), './')
+
+        y_true = test_dataset[:]['labels']
+
+        cm = plot_confusion_matrix(y_true, pred, test_dataset.LABELS)
+
+        self.logger.run["confusion_matrix"].upload(neptune.types.File.as_image(cm))
                 
     

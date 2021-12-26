@@ -505,10 +505,10 @@ for batch in test_dataloader:
 # metric on all batches using custom accumulation from torchmetrics library
 
 test_metrics = metric_collection.compute()
-print(' Test metrics: ')
-print(final_metrics)
 
-run['metrics'] = final_metrics
+
+
+run['test/metrics'] = test_metrics
 # Compute the average loss over all of the batches.
 avg_test_loss = total_test_loss / len(test_dataloader)
 

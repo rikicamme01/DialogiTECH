@@ -10,7 +10,7 @@ tok_name = "m-polignano-uniba/bert_uncased_L-12_H-768_A-12_italian_alb3rt0"
 
 train_dataset, val_dataset = train_val_split(df.head(100), tok_name)
 
-trainer = MPTrainer(2, 1e-5, 1)
+trainer = MPTrainer(2, 1e-5, 2)
 
 
 model = AutoModelForSequenceClassification.from_pretrained(tok_name, num_labels=23)
