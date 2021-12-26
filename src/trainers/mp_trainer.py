@@ -94,6 +94,8 @@ class MPTrainer():
             print('======== Epoch {:} / {:} ========'.format(epoch_i + 1, epochs))
             print('Training...')
 
+            self.metric_collection.reset()
+
             # Measure how long the training epoch takes.
             t0 = time.time()
 
@@ -261,14 +263,19 @@ class MPTrainer():
         print("Training complete!")
 
         print("Total training took {:} (h:mm:ss)".format(format_time(time.time()-total_t0)))
+
+
+
+
+
+
+
+
     
     def test(self, model, test_dataset):
         # ========================================
         #               Test
         # ========================================
-        # Measure performance on
-        # the validation set.
-
         test_dataloader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=False)
 
         # Setup for testing with gpu
@@ -283,28 +290,15 @@ class MPTrainer():
         # Save prediction for confusion matrix
         pred = []
 
-        # Put the model in evaluation mode: the dropout layers behave differently
         model.eval()
 
         total_test_loss = 0
 
         # Evaluate data for one epoch
         for batch in test_dataloader:
-            
-            # Unpack this training batch from our dataloader. 
-            #
-            # copy each tensor to the GPU using the 'to()' method
-            #
-            # 'batch' contains three pytorch tensors:
-            #   [0]: input ids 
-            #   [1]: attention masks
-            #   [2]: labels 
             b_input_ids = batch['input_ids'].to(device)
             b_input_mask = batch['attention_mask'].to(device)
             b_labels = batch['labels'].to(device)
-            
-            # Tell pytorch not to bother with constructing the compute graph during
-            # the forward pass, since this is only needed for training.
             with torch.no_grad():        
 
                 # Forward pass, calculate logits
@@ -315,7 +309,7 @@ class MPTrainer():
                 loss = outputs[0]
                 logits = outputs[1]
                 
-            # Accumulate the validation loss.
+            # Accumulate the test loss.
             total_test_loss += loss.item()
 
             # Move logits and labels to CPU
@@ -329,29 +323,19 @@ class MPTrainer():
 
             batch_metric = self.metric_collection.update(batch_pred, label_ids)
 
-        # Report the final metrics for this validation phase.
-        # metric on all batches using custom accumulation from torchmetrics library
-
         test_metrics = self.metric_collection.compute()
 
         self.logger.run['test/metrics'] = test_metrics
-        # Compute the average loss over all of the batches.
         avg_test_loss = total_test_loss / len(test_dataloader)
-
         self.logger.run['test/loss'] = avg_test_loss
-
-        # Measure how long the validation run took.
         test_time = format_time(time.time() - t0)
-
         print("  Test Loss: {0:.2f}".format(avg_test_loss))
         print("  Test took: {:}".format(test_time))
 
         #torch.save(model.state_dict(), './')
 
         y_true = test_dataset[:]['labels']
-
         cm = plot_confusion_matrix(y_true, pred, test_dataset.labels_list())
-
         self.logger.run["confusion_matrix"].upload(neptune.types.File.as_image(cm))
                 
     
