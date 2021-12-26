@@ -104,7 +104,7 @@ def decode_labels(encoded_labels):
     le.fit(LABELS)
     return le.inverse_transform(encoded_labels)
 
-def train_val_split(df, tok_name,  val_perc=0.1):
+def train_val_split(df, tok_name,  val_perc=0.2):
     gb = df.groupby('Repertorio')
     train_list = []
     val_list = []

@@ -269,7 +269,7 @@ class MPTrainer():
         # Measure performance on
         # the validation set.
 
-        test_dataloader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=True)
+        test_dataloader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=False)
 
         # Setup for testing with gpu
         device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
@@ -333,7 +333,6 @@ class MPTrainer():
         # metric on all batches using custom accumulation from torchmetrics library
 
         test_metrics = self.metric_collection.compute()
-        print(' Test metrics: ')
 
         self.logger.run['test/metrics'] = test_metrics
         # Compute the average loss over all of the batches.
