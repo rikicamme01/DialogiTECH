@@ -19,8 +19,9 @@ n_epochs = int(sys.argv[2])
 
 seed_everything(1464)
 
-df = pd.read_csv('../data/Splitted_full/Hyperion_train.csv', na_filter=False)
-test_df = pd.read_csv('../data/Splitted_full/Hyperion_test.csv', na_filter=False)
+#cluster paths
+df = pd.read_csv('./RepML/data/Splitted_full/Hyperion_train.csv', na_filter=False)
+test_df = pd.read_csv('./RepML/data/Splitted_full/Hyperion_test.csv', na_filter=False)
 
 model_name = "m-polignano-uniba/bert_uncased_L-12_H-768_A-12_italian_alb3rt0"
 
