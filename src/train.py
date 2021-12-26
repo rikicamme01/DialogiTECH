@@ -1,6 +1,6 @@
 import pandas as pd
 from transformers import AutoModelForSequenceClassification
-from datasets import HyperionDataset
+from datasets.hyperion_dataset import HyperionDataset
 
 from datasets.hyperion_dataset import train_val_split
 from trainers.mp_trainer import MPTrainer
