@@ -81,6 +81,7 @@ class MPTrainer():
         # Setup for training with gpu
         device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
         model.to(device)
+        self.loss_fn.to(device)
 
         # For each epoch...
         for epoch_i in range(0, epochs):
