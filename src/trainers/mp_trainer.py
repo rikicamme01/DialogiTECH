@@ -230,7 +230,7 @@ class MPTrainer():
                     #loss = outputs[0]
                     logits = outputs[1]
                     logSoftmax = torch.nn.LogSoftmax(dim=1)
-                    loss = self.loss_fn(logits, b_labels)
+                    loss = self.loss_fn(logSoftmax(logits), b_labels)
                     
                 # Accumulate the validation loss.
                 total_val_loss += loss.item()
@@ -315,7 +315,7 @@ class MPTrainer():
                 #loss = outputs[0]
                 logits = outputs[1]
                 logSoftmax = torch.nn.LogSoftmax(dim=1)
-                loss = self.loss_fn(logits, b_labels)
+                loss = self.loss_fn(logSoftmax(logits), b_labels)
                 
             # Accumulate the test loss.
             total_test_loss += loss.item()
