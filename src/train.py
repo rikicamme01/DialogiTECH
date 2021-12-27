@@ -38,7 +38,7 @@ class_weights = [107.0, 11.88888888888889, 1.2829003711104767, 8.794520547945206
     2.036248300860897, 12.803418803418804,7.953982300884956, 4.832258064516129, 4.192164179104478,
     9.115618661257606, 2.9295958279009127, 4.816720257234727, 21.921951219512195, 5.1068181818181815,
     1.0, 4.026881720430108, 2.646643109540636]
-trainer = MPTrainer(batch_size, learning_rate, n_epochs, torch.nn.NLLLoss(weight = torch.Tensor(class_weights)))
+trainer = MPTrainer(batch_size, learning_rate, n_epochs, torch.nn.NLLLoss(weight = torch.HalfTensor(class_weights)))
 
 
 model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=23)
