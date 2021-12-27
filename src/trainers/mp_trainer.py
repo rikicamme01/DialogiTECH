@@ -14,12 +14,13 @@ import neptune.new as neptune
 
 
 class MPTrainer():
-    def __init__(self, batch_size, lr, n_epochs, ) -> None:
+    def __init__(self, batch_size, lr, n_epochs, loss_fn) -> None:
         self.batch_size = batch_size
         self.learning_rate = lr
         self.n_epochs = n_epochs
 
         self.logger = NeptuneLogger()
+        self.loss_fn = loss_fn
 
         self.metric_collection = torchmetrics.MetricCollection({
 
@@ -139,8 +140,10 @@ class MPTrainer():
                                     attention_mask=b_input_mask, 
                                     labels=b_labels)
                 
-                loss = outputs[0]
+                #loss = outputs[0]
                 logits = outputs[1]
+                logSoftmax = torch.nn.LogSoftmax(dim=1)
+                loss = self.loss_fn(logSoftmax(logits), b_labels)
 
                 # Move logits and labels to CPU
                 logits = logits.detach().cpu()
@@ -223,8 +226,10 @@ class MPTrainer():
                     outputs = model(b_input_ids, 
                                         attention_mask=b_input_mask,
                                         labels=b_labels)
-                    loss = outputs[0]
+                    #loss = outputs[0]
                     logits = outputs[1]
+                    logSoftmax = torch.nn.LogSoftmax(dim=1)
+                    loss = self.loss_fn(logits, b_labels)
                     
                 # Accumulate the validation loss.
                 total_val_loss += loss.item()
@@ -306,8 +311,10 @@ class MPTrainer():
                 outputs = model(b_input_ids, 
                                         attention_mask=b_input_mask,
                                         labels=b_labels)
-                loss = outputs[0]
+                #loss = outputs[0]
                 logits = outputs[1]
+                logSoftmax = torch.nn.LogSoftmax(dim=1)
+                loss = self.loss_fn(logits, b_labels)
                 
             # Accumulate the test loss.
             total_test_loss += loss.item()
