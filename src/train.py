@@ -29,7 +29,7 @@ test_df = pd.read_csv('./RepML/data/Splitted_full/Hyperion_test.csv', na_filter=
 
 model_name = "m-polignano-uniba/bert_uncased_L-12_H-768_A-12_italian_alb3rt0"
 
-train_dataset, val_dataset = train_val_split(df, model_name)
+train_dataset, val_dataset = train_val_split(df, model_name, subsample=True)
 test_dataset = HyperionDataset(test_df, model_name)
 
 trainer = MPTrainer(batch_size, learning_rate, n_epochs)
