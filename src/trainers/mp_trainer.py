@@ -242,7 +242,7 @@ class MPTrainer():
             final_metrics = self.metric_collection.compute()
             epochs_val_f1.append(final_metrics['f1_weighted'])
 
-            self.logger.run['validation/' + str(epoch_i) + '/metrics'] = final_metrics
+            self.logger.run['validation/' + str(epoch_i + 1) + '/metrics'] = final_metrics
             print('VALIDATION: ')
             
             # Compute the average loss over all of the batches.
