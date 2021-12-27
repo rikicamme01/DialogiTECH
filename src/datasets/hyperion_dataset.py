@@ -110,7 +110,7 @@ def train_val_split(df, tok_name,  val_perc=0.2, subsample = False):
     val_list = []
     for x in gb.groups:
         if subsample:
-            class_df = gb.get_group(x.head(50))
+            class_df = gb.get_group(x).head(50)
         else:
             class_df = gb.get_group(x)
 
