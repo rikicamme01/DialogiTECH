@@ -104,13 +104,15 @@ def decode_labels(encoded_labels):
     le.fit(LABELS)
     return le.inverse_transform(encoded_labels)
 
-def train_val_split(df, tok_name,  val_perc=0.2):
+def train_val_split(df, tok_name,  val_perc=0.2, subsample = False):
     gb = df.groupby('Repertorio')
     train_list = []
     val_list = []
-
     for x in gb.groups:
-        class_df = gb.get_group(x)
+        if subsample:
+            class_df = gb.get_group(x.head(50))
+        else:
+            class_df = gb.get_group(x)
 
         # Validation set creation
         val = class_df.sample(frac=val_perc)
@@ -119,6 +121,7 @@ def train_val_split(df, tok_name,  val_perc=0.2):
         #train_list.append(train.head(500))
         train_list.append(train)
         val_list.append(val)
+
 
     train_df = pd.concat(train_list)
     val_df = pd.concat(val_list)
