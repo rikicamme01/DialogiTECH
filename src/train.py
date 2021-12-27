@@ -30,7 +30,7 @@ test_df = pd.read_csv('./RepML/data/Splitted_full/Hyperion_test.csv', na_filter=
 
 model_name = "m-polignano-uniba/bert_uncased_L-12_H-768_A-12_italian_alb3rt0"
 
-train_dataset, val_dataset = train_val_split(df, model_name, subsample=True)
+train_dataset, val_dataset = train_val_split(df, model_name, subsample=False)
 test_dataset = HyperionDataset(test_df, model_name)
 
 class_weights = [107.0, 11.88888888888889, 1.2829003711104767, 8.794520547945206, 17.976,
