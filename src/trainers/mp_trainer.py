@@ -141,10 +141,10 @@ class MPTrainer():
                                     attention_mask=b_input_mask, 
                                     labels=b_labels)
                 
-                #loss = outputs[0]
-                logits = outputs[1]
-                logSoftmax = torch.nn.LogSoftmax(dim=1)
-                loss = self.loss_fn(logSoftmax(logits), b_labels)
+                    #loss = outputs[0]
+                    logits = outputs[1]
+                    logSoftmax = torch.nn.LogSoftmax(dim=1)
+                    loss = self.loss_fn(logSoftmax(logits), b_labels)
 
                 # Move logits and labels to CPU
                 logits = logits.detach().cpu()
