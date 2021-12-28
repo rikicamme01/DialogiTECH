@@ -28,7 +28,8 @@ test_df = pd.read_csv('./RepML/data/Splitted_full/Hyperion_test.csv', na_filter=
 #df = pd.read_csv('./data/Splitted_full/Hyperion_train.csv', na_filter=False)
 #test_df = pd.read_csv('./data/Splitted_full/Hyperion_test.csv', na_filter=False)
 
-model_name = "m-polignano-uniba/bert_uncased_L-12_H-768_A-12_italian_alb3rt0"
+#model_name = "m-polignano-uniba/bert_uncased_L-12_H-768_A-12_italian_alb3rt0"
+model_name = "dbmdz/bert-base-italian-xxl-uncased"
 
 train_dataset, val_dataset = train_val_split(df, model_name, subsample=False)
 test_dataset = HyperionDataset(test_df, model_name)
