@@ -18,7 +18,7 @@ learning_rate = 1e-5
 batch_size = int(sys.argv[1])
 n_epochs = int(sys.argv[2])
 
-seed_everything(1464)
+seed_everything(4321)
 
 #cluster paths
 df = pd.read_csv('./RepML/data/Splitted_full/Hyperion_train.csv', na_filter=False)
