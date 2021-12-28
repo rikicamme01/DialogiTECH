@@ -6,6 +6,7 @@ import torchmetrics
 import torch
 from torch.utils.data import DataLoader
 from transformers import  AdamW
+from transformers import get_constant_schedule_with_warmup
 
 from utils.utils import format_time, plot_confusion_matrix, plot_f1
 from utils.utils import plot_loss
@@ -74,6 +75,7 @@ class MPTrainer():
 
         #Adam algorithm optimized for tranfor architectures
         optimizer = AdamW(model.parameters(), lr=self.learning_rate)
+        scheduler = get_constant_schedule_with_warmup(optimizer, num_warmup_steps=400)
 
         # Scaler for mixed precision
         scaler = torch.cuda.amp.GradScaler()
@@ -170,6 +172,7 @@ class MPTrainer():
                 # Update parameters and take a step using the computed gradient in MIXED precision
                 scaler.step(optimizer)
                 scaler.update()
+                scheduler.step()
 
 
             # Compute the average loss over all of the batches.
