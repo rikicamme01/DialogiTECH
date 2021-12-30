@@ -1,7 +1,13 @@
+import re
+
 import pandas as pd
 import torch
 from sklearn import preprocessing
 from transformers import AutoTokenizer
+
+from ekphrasis.classes.preprocessor import TextPreProcessor
+from ekphrasis.classes.tokenizer import SocialTokenizer
+from ekphrasis.dicts.emoticons import emoticons
 
 LABELS = [
                 'anticipazione',
@@ -35,6 +41,7 @@ class HyperionDataset(torch.utils.data.Dataset):
     def __init__(self, df, tokenizer_name):
         #fill_null_features(df)
         df = filter_empty_labels(df)
+        df = twitter_preprocess(df)
         df = to_lower_case(df)
         uniform_labels(df)          
         tokenizer = AutoTokenizer.from_pretrained(tokenizer_name) 
@@ -103,6 +110,42 @@ def decode_labels(encoded_labels):
     le = preprocessing.LabelEncoder()
     le.fit(LABELS)
     return le.inverse_transform(encoded_labels)
+
+def twitter_preprocess(df):
+    text_processor = TextPreProcessor(
+    # terms that will be normalized
+    normalize=['url', 'email', 'percent', 'money', 'phone', 'user',
+        'time', 'date', 'number'],
+    # terms that will be annotated
+    annotate={"hashtag"},
+    fix_html=True,  # fix HTML tokens
+    
+    unpack_hashtags=True,  # perform word segmentation on hashtags
+    
+    # select a tokenizer. You can use SocialTokenizer, or pass your own
+    # the tokenizer, should take as input a string and return a list of tokens
+    tokenizer=SocialTokenizer(lowercase=True).tokenize,
+    
+    # list of dictionaries, for replacing tokens extracted from the text,
+    # with other expressions. You can pass more than one dictionaries.
+    dicts=[emoticons]
+    )
+
+    processed = []
+
+    for s in df['Stralcio']:
+        s = str(" ".join(text_processor.pre_process_doc(s)))
+        s = re.sub(r"[^a-zA-ZÀ-ú</>!?♥♡\s\U00010000-\U0010ffff]", ' ', s)
+        s = re.sub(r"\s+", ' ', s)
+        s = re.sub(r'(\w)\1{2,}',r'\1\1', s)
+        s = re.sub ( r'^\s' , '' , s )
+        s = re.sub ( r'\s$' , '' , s )
+        processed.append(s)
+
+    df['Stralcio'] = processed
+
+    return df
+    
 
 def train_val_split(df, tok_name,  val_perc=0.2, subsample = False):
     gb = df.groupby('Repertorio')

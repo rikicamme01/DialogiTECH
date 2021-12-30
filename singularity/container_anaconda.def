@@ -30,3 +30,4 @@ From: continuumio/miniconda3
     conda install pytorch-lightning -c conda-forge
     conda install -c anaconda pip
     pip install transformers
+    pip install ekphrasis
