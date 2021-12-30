@@ -75,7 +75,7 @@ class MPTrainer():
 
         #Adam algorithm optimized for tranfor architectures
         optimizer = AdamW(model.parameters(), lr=self.learning_rate)
-        scheduler = get_constant_schedule_with_warmup(optimizer, num_warmup_steps=300)
+        #scheduler = get_constant_schedule_with_warmup(optimizer, num_warmup_steps=300)
 
         # Scaler for mixed precision
         scaler = torch.cuda.amp.GradScaler()
@@ -172,7 +172,7 @@ class MPTrainer():
                 # Update parameters and take a step using the computed gradient in MIXED precision
                 scaler.step(optimizer)
                 scaler.update()
-                scheduler.step()
+                #scheduler.step()
 
 
             # Compute the average loss over all of the batches.
