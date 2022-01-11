@@ -55,3 +55,4 @@ model.name = model_name
 
 trainer.fit(model,train_dataset, val_dataset)
 trainer.test(model,test_dataset)
+
