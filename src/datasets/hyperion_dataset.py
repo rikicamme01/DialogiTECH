@@ -44,7 +44,7 @@ class HyperionDataset(torch.utils.data.Dataset):
         df = twitter_preprocess(df)
         df = to_lower_case(df)
         uniform_labels(df)          
-        tokenizer = AutoTokenizer.from_pretrained(tokenizer_name) 
+        tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
         self.encodings = tokenize(df, tokenizer)
         self.labels = encode_labels(df).tolist()    
 
