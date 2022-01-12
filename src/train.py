@@ -54,8 +54,8 @@ model = AutoModelForSequenceClassification.from_pretrained(model_name, num_label
 model.name = model_name
 
 
-#trainer.fit(model,train_dataset, val_dataset)
-#trainer.test(model,test_dataset)
+trainer.fit(model,train_dataset, val_dataset)
+trainer.test(model,test_dataset)
 
 hf_token = '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'
 
