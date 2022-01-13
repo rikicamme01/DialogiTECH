@@ -95,7 +95,7 @@ for sample in dataset:
     #bounds += find_char_bounds(spans, sample['Testo'])
     bounds += find_word_bounds(tokens, sample['Testo'])
     nltk_pred.append(bounds)
-    spans_pred.append(spans) 
+    spans_pred.append(tokens) 
 
 
 # A è B sono tupe con i bound dello span
