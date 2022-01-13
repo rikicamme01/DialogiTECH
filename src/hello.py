@@ -86,13 +86,14 @@ for sample in dataset:
     tokens = sent_tokenize(sample['Testo'])
     spans = []
     bounds = []
+    """
     for x in tokens:
         #spans += re.findall('.*?[.:!?;,]', x)
-        spans += re.split('[;,]', x)
+        spans += re.split('[]', x)
         spans = list(filter(None, spans)) # filter empty strings
-
+    """
     #bounds += find_char_bounds(spans, sample['Testo'])
-    bounds += find_word_bounds(spans, sample['Testo'])
+    bounds += find_word_bounds(tokens, sample['Testo'])
     nltk_pred.append(bounds)
     spans_pred.append(spans) 
 
