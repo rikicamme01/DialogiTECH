@@ -13,9 +13,14 @@ from torch.utils.data import TensorDataset
 from torch.utils.data import DataLoader
 from torch.nn import utils
 from torch.utils.data import DataLoader
+import neptune.new as neptune
 
 
-
+#Neptune initialization
+run = neptune.init(
+    project="mibo8/Rep",
+    api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiJmZmRkYThiZi1mZGNlLTRlMTktODQwNS1hNWFlMWQ2Mjc4N2IifQ==",
+)
 
 df = pd.read_csv('./RepML/data/Original_csv/Hyperion.csv', na_filter=False)
 
