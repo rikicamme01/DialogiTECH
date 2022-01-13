@@ -88,7 +88,7 @@ for sample in dataset:
     bounds = []
     for x in tokens:
         #spans += re.findall('.*?[.:!?;,]', x)
-        spans += re.split('[.:!?;,]', x)
+        spans += re.split('[;,]', x)
         spans = list(filter(None, spans)) # filter empty strings
 
     #bounds += find_char_bounds(spans, sample['Testo'])
