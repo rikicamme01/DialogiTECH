@@ -64,5 +64,5 @@ hf_token = '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'
 os.makedirs("Model")
 model.save_pretrained("Model", push_to_hub=True, repo_name="RepML")
 """
-model.push_to_hub("RepML", use_temp_dir=True, use_auth_token=hf_token)
+#model.push_to_hub("RepML", use_temp_dir=True, use_auth_token=hf_token)
 

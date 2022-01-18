@@ -47,6 +47,7 @@ class HyperionDataset(torch.utils.data.Dataset):
         tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
         self.encodings = tokenizer(
         df['Stralcio'].tolist(),
+        df['Contesto'].tolist(),
         max_length=512,
         add_special_tokens=True,
         return_attention_mask=True,
