@@ -45,7 +45,48 @@ class HyperionDataset(torch.utils.data.Dataset):
         df = to_lower_case(df)
         uniform_labels(df)          
         tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
-        self.encodings = tokenize(df, tokenizer)
+        self.encodings = tokenizer(
+        df['Stralcio'].tolist(),
+        max_length=512,
+        add_special_tokens=True,
+        return_attention_mask=True,
+        padding=True,
+        truncation=True,
+        return_tensors="pt"
+    )
+        self.labels = encode_labels(df).tolist()    
+
+    def __getitem__(self, idx):
+        item = {key: val[idx] for key, val in self.encodings.items()}
+        
+        item['labels'] = self.labels[idx]
+        return item
+
+    def __len__(self):
+        return len(self.labels)
+    
+    def labels_list(self):
+        return LABELS
+
+class HyperionDatasetWithCntext(torch.utils.data.Dataset):
+    
+
+    def __init__(self, df, tokenizer_name):
+        #fill_null_features(df)
+        df = filter_empty_labels(df)
+        #df = twitter_preprocess(df)
+        df = to_lower_case(df)
+        uniform_labels(df)          
+        tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
+        self.encodings = tokenizer(
+        df['Stralcio'].tolist(),
+        max_length=512,
+        add_special_tokens=True,
+        return_attention_mask=True,
+        padding=True,
+        truncation=True,
+        return_tensors="pt"
+    )
         self.labels = encode_labels(df).tolist()    
 
     def __getitem__(self, idx):
@@ -89,17 +130,6 @@ def uniform_labels(df):
     df['Repertorio'].replace('implicazioni','implicazione', inplace=True)
     df['Repertorio'].replace('previsioni','previsione', inplace=True)
 
-def tokenize(df, tokenizer):
-    return tokenizer(
-        df['Stralcio'].tolist(),
-        #df['Domanda'].tolist(),
-        max_length=512,
-        add_special_tokens=True,
-        return_attention_mask=True,
-        padding=True,
-        truncation=True,
-        return_tensors="pt"
-    )
 
 def encode_labels(df):
     le = preprocessing.LabelEncoder()
