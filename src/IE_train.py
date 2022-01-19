@@ -33,8 +33,8 @@ import numpy as np
 
 # Hyperparameters
 learning_rate = 1e-5
-batch_size = 2
-n_epochs = 1
+batch_size = 24
+n_epochs = 3
 model_name = "bert-base-multilingual-cased"
 
 
