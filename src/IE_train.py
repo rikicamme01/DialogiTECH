@@ -112,12 +112,17 @@ for sample in dataset:
 
 
 i = 0
-for idx, sample in enumerate(dataset):
-    x = len(sample['Subword_Tags'])
-    y = len(tok.tokenize(sample['Testo']))
+j=0
+while j<len(dataset):
+    print(j)
+    print(len(dataset))
+    x = len(dataset[j]['Subword_Tags'])
+    y = len(tok.tokenize(dataset[j]['Testo']))
     if x != y:
         i += 1
-        del dataset[idx]
+        del dataset[j]
+        j-=1
+    j += 1
 
 
 IE_dict = {
