@@ -50,7 +50,7 @@ class HyperionDataset(torch.utils.data.Dataset):
         max_length=512,
         add_special_tokens=True,
         return_attention_mask=True,
-        padding='max_length',
+        padding=True,
         truncation=True,
         return_tensors="pt"
     )
