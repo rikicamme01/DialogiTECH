@@ -34,7 +34,7 @@ import numpy as np
 # Hyperparameters
 learning_rate = 1e-5
 batch_size = 24
-n_epochs = 3
+n_epochs = 4
 model_name = "bert-base-multilingual-cased"
 
 
@@ -195,7 +195,7 @@ print("TEST Dataset: {}".format(test_df.shape))
 
 train_dataset = IE_Hyperion_dataset(train_df, model_name)
 val_dataset = IE_Hyperion_dataset(val_df, model_name) 
-test_dataset = IE_Hyperion_dataset(test_df.head(50), model_name)
+test_dataset = IE_Hyperion_dataset(test_df, model_name)
 
 model = AutoModelForTokenClassification.from_pretrained(model_name, num_labels=2)
 
