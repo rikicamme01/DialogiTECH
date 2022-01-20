@@ -29,15 +29,15 @@ from transformers import  AdamW
 from transformers import get_constant_schedule_with_warmup
 import numpy as np
 
-if len(sys.argv) != 3:
-    print("ERROR:  batch_size n_epochs  not provided")
+if len(sys.argv) != 4:
+    print("ERROR:  batch_size n_epochs model_name  not provided")
     sys.exit(1)
 
 # Hyperparameters
 learning_rate = 1e-5
 batch_size = int(sys.argv[1])
 n_epochs = int(sys.argv[2])
-model_name = "bert-base-multilingual-cased"
+model_name = sys.argv[3]
 
 
 
