@@ -106,7 +106,7 @@ for row in df.itertuples():
         sample['Repertori'] = [row.Repertorio]
         dataset.append(sample)
         
-tok = AutoTokenizer.from_pretrained("bert-base-multilingual-cased")
+tok = AutoTokenizer.from_pretrained(model_name)
 for sample in dataset:
     sample['Bounds'] = find_word_bounds(sample['Stralci'], sample['Testo'])
     sample['Subword_Bounds'] = find_subword_bounds(sample['Stralci'], sample['Testo'], tok)
