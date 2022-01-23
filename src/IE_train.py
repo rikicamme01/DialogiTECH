@@ -1,8 +1,7 @@
 import pandas as pd
 import string
-from transformers import AutoTokenizer, AutoModel
+from transformers import AutoTokenizer
 from torch.utils.data import Dataset, DataLoader
-from transformers import AutoTokenizer, AutoModel
 from sklearn import preprocessing
 import numpy as np
 import torch
@@ -38,11 +37,12 @@ if len(sys.argv) != 4:
 learning_rate = 1e-5
 batch_size = int(sys.argv[1])
 n_epochs = int(sys.argv[2])
-model_name = sys.argv[3]
+model_name = str(sys.argv[3])
 
 
 
-df = pd.read_csv('./RepML/data/Original_csv/Hyperion.csv')
+#df = pd.read_csv('./RepML/data/Original_csv/Hyperion.csv')
+df = pd.read_csv('./data/Original_csv/Hyperion.csv')
 
 def find_word_bounds(spans: list, text: str) -> list:
     bounds = []
@@ -117,8 +117,6 @@ for sample in dataset:
 i = 0
 j=0
 while j<len(dataset):
-    print(j)
-    print(len(dataset))
     x = len(dataset[j]['Subword_Tags'])
     y = len(tok.tokenize(dataset[j]['Testo']))
     if x != y:
@@ -277,7 +275,7 @@ class IE_MPTrainer():
             'batch_size' : self.batch_size,
             'n_epochs' : self.n_epochs
         }
-        #self.logger.run['params'] = params_info
+        self.logger.run['params'] = params_info
 
         torch.cuda.empty_cache()
         #----------TRAINING
