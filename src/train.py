@@ -10,8 +10,8 @@ from datasets.hyperion_dataset import train_val_split
 from trainers.mp_trainer import MPTrainer
 from utils.utils import seed_everything
 
-if len(sys.argv) != 3:
-    print("ERROR:  batch_size n_epochs  not provided")
+if len(sys.argv) != 4:
+    print("ERROR:  batch_size n_epochs model_name not provided")
     sys.exit(1)
 
 # Hyperparameters
@@ -29,7 +29,8 @@ test_df = pd.read_csv('./RepML/data/Splitted_full/Hyperion_test.csv', na_filter=
 #df = pd.read_csv('./data/Splitted_full/Hyperion_train.csv', na_filter=False)
 #test_df = pd.read_csv('./data/Splitted_full/Hyperion_test.csv', na_filter=False)
 
-model_name = "m-polignano-uniba/bert_uncased_L-12_H-768_A-12_italian_alb3rt0"
+model_name = sys.argv[3]
+#model_name = "m-polignano-uniba/bert_uncased_L-12_H-768_A-12_italian_alb3rt0"
 #model_name = "dbmdz/bert-base-italian-xxl-uncased"
 #model_name = "bert-base-multilingual-cased"
 
