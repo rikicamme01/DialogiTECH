@@ -10,8 +10,8 @@ from datasets.hyperion_dataset import train_val_split
 from trainers.mp_trainer import MPTrainer
 from utils.utils import seed_everything
 
-if len(sys.argv) != 4:
-    print("ERROR:  batch_size n_epochs model_name not provided")
+if len(sys.argv) != 5:
+    print("ERROR:  batch_size n_epochs model_name save(TRUE) not provided")
     sys.exit(1)
 
 # Hyperparameters
@@ -59,5 +59,6 @@ trainer.fit(model,train_dataset, val_dataset)
 trainer.test(model,test_dataset)
 
 hf_token = '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'
-model.push_to_hub("RepML", use_temp_dir=True, use_auth_token=hf_token)
+if sys.argv[4] == 'save':
+    model.push_to_hub("RepML", use_temp_dir=True, use_auth_token=hf_token)
 
