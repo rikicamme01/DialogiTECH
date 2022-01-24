@@ -44,50 +44,36 @@ model_name = str(sys.argv[3])
 #df = pd.read_csv('./RepML/data/Original_csv/Hyperion.csv')
 df = pd.read_csv('./data/Original_csv/Hyperion.csv')
 
-def find_word_bounds(spans: list, text: str) -> list:
+def find_char_bounds(spans: list, text: str) -> list:
+    '''
+    Given a list of spans and a text, find the start and end indices of each span in the text.
+    Indeces are computed counting chars
+    
+    :param spans: a list of strings to search for
+    :type spans: list
+    :param text: the text to search
+    :type text: str
+    :return: A list of tuples, where each tuple contains the start and end index of a span.
+    '''
     bounds = []
-    end = 0
+    last_char = 0
     for span in spans:
-        s = span.translate(str.maketrans('', '', string.punctuation))
-        word_list = s.split()
-        text_list = text.translate(str.maketrans('', '', string.punctuation)).split()
-        try:
-            start = text_list.index(word_list[0], end)
-        except:
-            if not bounds:
-                start = 0
-            else:
-                
-                start = bounds[-1][1] + 1
-        end = start + len(word_list) - 1
-            
-        bounds.append((start, end))
+        start = text.find(span)
+        if start == -1:
+            start = last_char + 1
+        bounds.append((start, start + len(span)-1))
+        last_char = start + len(span)-1
     return bounds
 
-def find_subword_bounds(spans: list, text: str, tokenizer) -> list:
-    bounds = []
-    end = 0
-    text_tok_list =tokenizer.tokenize(text)
-    for span in spans:
-        #s = span.translate(str.maketrans('', '', string.punctuation))
-        tok_list = tok.tokenize(span)
-        if not bounds:
-            start = 0
+
+def IE_gen(bounds: list, text:str) -> str:
+    tags = ['I' for i in range(len(text))]
+    for bound in bounds:
+        if bound[1] < len(text):
+            tags[bound[1]] = 'E'
         else:
-            start = bounds[-1][1]
-        for i in range(len(text_tok_list)):
-            if tok_list[0] == text_tok_list[i]:
-                start = i
-        for i in range(len(text_tok_list)):
-            if tok_list[-1] == text_tok_list[i]:
-                end = i
-        bounds.append((start, end))
-    return bounds
-
-def IE_gen(bounds:list) -> str:
-    end = [bound[1] for bound in bounds]
-    x = ['E' if i in end else 'I' for i in range(end[-1]+1)]
-    return ''.join(x)
+            tags[-1] = 'E'
+    return ''.join(tags)
 
 
 dataset = []
@@ -106,31 +92,11 @@ for row in df.itertuples():
         sample['Repertori'] = [row.Repertorio]
         dataset.append(sample)
         
-tok = AutoTokenizer.from_pretrained(model_name)
-for sample in dataset:
-    sample['Bounds'] = find_word_bounds(sample['Stralci'], sample['Testo'])
-    sample['Subword_Bounds'] = find_subword_bounds(sample['Stralci'], sample['Testo'], tok)
-    sample['Tags'] = IE_gen(sample['Bounds'])
-    sample['Subword_Tags'] = IE_gen(sample['Subword_Bounds'])
-
-
-i = 0
-j=0
-while j<len(dataset):
-    x = len(dataset[j]['Subword_Tags'])
-    y = len(tok.tokenize(dataset[j]['Testo']))
-    if x != y:
-        i += 1
-        del dataset[j]
-        j-=1
-    j += 1
-
-
 IE_dict = {
-    'Testo' : [sample['Testo'] for sample in dataset],
-    'Subword_Tags' : [sample['Subword_Tags'] for sample in dataset],
-    'Subword_bounds' : [sample['Subword_Bounds'] for sample in dataset],
-    'Repertori' : [sample['Repertori'] for sample in dataset]
+    'Testo': [sample['Testo'] for sample in dataset],
+    'Tags': [sample['Tags'] for sample in dataset],
+    'Bounds': [sample['Bounds'] for sample in dataset],
+    'Repertori': [sample['Repertori'] for sample in dataset]
 }
 IE_df = pd.DataFrame(IE_dict)
 
@@ -153,28 +119,29 @@ class IE_Hyperion_dataset(Dataset):
     def __getitem__(self, idx):
         text = self.df['Testo'].iloc[idx]
         encoding = self.tokenizer(text,
-                            #is_pretokenized=True, 
-                            return_special_tokens_mask=True, 
-                            add_special_tokens=True,
-                            return_attention_mask=True,
-                            padding='max_length',
-                            truncation=True,
-                        )
-        labels = encode_labels(list(self.df['Subword_Tags'].iloc[idx]))
-        
+                                  # is_pretokenized=True,
+                                  return_special_tokens_mask=True,
+                                  return_offsets_mapping=True,
+                                  add_special_tokens=True,
+                                  return_attention_mask=True,
+                                  padding='max_length',
+                                  truncation=True,
+                                  )
+        char_labels = encode_labels(list(self.df['Tags'].iloc[idx]))
+
         encoded_labels = np.ones(len(encoding['input_ids']), dtype=int) * -100
-        i=0
-        for idx, e in enumerate(encoding['special_tokens_mask']):
-            if e == 0:
+        for idx, e in enumerate(encoding['offset_mapping']):
+            if e[1] != 0:
                 # overwrite label
-                encoded_labels[idx] = labels[i]
-                i+=1
-        
-        
+                if 0 in char_labels[e[0]:e[1]]:
+                    encoded_labels [idx] = 0
+                else:
+                    encoded_labels [idx] = 1
+
+
         item = {key: torch.as_tensor(val) for key, val in encoding.items()}
         item['labels'] = torch.as_tensor(encoded_labels)
         return item
-
 
     def __len__(self):
         return len(self.df.index)
@@ -545,7 +512,7 @@ trainer = IE_MPTrainer(batch_size, learning_rate, n_epochs)
 trainer.fit(model, train_dataset, val_dataset)
 pred = trainer.test(model,test_dataset)
 
-def pred_to_bounds(pred:list):
+def pred_to_bounds(pred: list):
     dataset_bounds = []
     for e in pred:
         start = 0
@@ -557,9 +524,14 @@ def pred_to_bounds(pred:list):
                 bounds.append((start, end))
                 start = end + 1
         dataset_bounds.append(bounds)
-    return dataset_bounds    
+    return dataset_bounds
+
 
 bert_pred = pred_to_bounds(pred)
+gt_bounds = []
+for sample in test_dataset:
+    gt_bounds.append(pred_to_bounds([sample['labels']])[0])
+test_df['Subword_bounds'] = gt_bounds
 
 def IoU(A, B):
     if A == B:
@@ -571,11 +543,13 @@ def IoU(A, B):
     intersection = end - start
     return intersection / (A[1] - A[0] + B[1] - B[0] - intersection)
 
+
 def compute_IoUs(pred_bounds, gt_spans):
     IoUs = []
     for gt_bounds in gt_spans:
-        IoUs.append(IoU(pred_bounds, gt_bounds)) 
+        IoUs.append(IoU(pred_bounds, gt_bounds))
     return IoUs
+
 
 def normalize(text_spans_dict, gt_spans):
     normalized = []
@@ -583,23 +557,25 @@ def normalize(text_spans_dict, gt_spans):
         #normalized is not empty
         if normalized:
             if normalized[-1]['Repertorio'] == text_spans_dict[i]['Repertorio']:
-                new_span = (normalized[-1]['Bounds'][0], text_spans_dict[i]['Bounds'][1])
+                new_span = (normalized[-1]['Bounds'][0],
+                            text_spans_dict[i]['Bounds'][1])
                 new_span_features = {
-                    'Bounds' : new_span, 
-                    'IoU' : None,
-                    'Repertorio' : text_spans_dict[i]['Repertorio']
-                    }
+                    'Bounds': new_span,
+                    'IoU': None,
+                    'Repertorio': text_spans_dict[i]['Repertorio']
+                }
                 del normalized[-1]
                 normalized.append(new_span_features)
             else:
                 normalized.append(text_spans_dict[i])
         else:
             normalized.append(text_spans_dict[i])
-        
-    
+
     for i in range(len(normalized)):
-        normalized[i]['IoU'] = max(compute_IoUs(normalized[i]['Bounds'], gt_spans['Subword_bounds']))
+        normalized[i]['IoU'] = max(compute_IoUs(
+            normalized[i]['Bounds'], gt_spans['Bounds']))
     return normalized
+
 
 metrics = []
 normalized_metrics = []
@@ -609,10 +585,10 @@ for i, pred_bounds in enumerate(bert_pred):
         IoUs = compute_IoUs(pred_span, test_df.iloc[i]['Subword_bounds'])
         best = np.argmax(IoUs)
         span_features = {
-            'Bounds' : pred_span, 
-            'IoU' : IoUs[best],
-            'Repertorio' : test_df.iloc[i]['Repertori'][best]
-            }
+            'Bounds': pred_span,
+            'IoU': IoUs[best],
+            'Repertorio': test_df.iloc[i]['Repertori'][best]
+        }
 
         text_IoUs.append(span_features)
     metrics.append(text_IoUs)
@@ -636,7 +612,7 @@ print('Numero stralci predetti:', str(n_spans))
 mean = 0
 long_spans = 0
 min_lenght = 0
-perfect_spans =0
+perfect_spans = 0
 for text in metrics:
     for span in text:
         if span['Bounds'][1] - span['Bounds'][0] >= min_lenght:
@@ -646,7 +622,8 @@ for text in metrics:
                 perfect_spans += 1
 perfect_spans_perc = perfect_spans / long_spans
 mean_IoU = mean / long_spans
-print('Numero stralci con lunghezza minima = ', str(min_lenght), ': ', str(long_spans))
+print('Numero stralci con lunghezza minima = ',
+      str(min_lenght), ': ', str(long_spans))
 print('Media IoU:', str(mean_IoU))
 print('Percentuale span perfetti: ', str(perfect_spans_perc))
 
@@ -668,7 +645,7 @@ print('Numero stralci predetti:', str(n_spans))
 mean = 0
 long_spans = 0
 min_lenght = 0
-perfect_spans =0
+perfect_spans = 0
 for text in normalized_metrics:
     for span in text:
         if span['Bounds'][1] - span['Bounds'][0] >= min_lenght:
@@ -678,7 +655,7 @@ for text in normalized_metrics:
                 perfect_spans += 1
 perfect_spans_perc = perfect_spans / long_spans
 mean_IoU = mean / long_spans
-print('Numero stralci con lunghezza minima = ', str(min_lenght), ': ', str(long_spans))
+print('Numero stralci con lunghezza minima = ',
+      str(min_lenght), ': ', str(long_spans))
 print('Media IoU:', str(mean_IoU))
 print('Percentuale span perfetti: ', str(perfect_spans_perc))
-
