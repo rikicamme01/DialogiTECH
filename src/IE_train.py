@@ -41,8 +41,8 @@ model_name = str(sys.argv[3])
 
 
 
-#df = pd.read_csv('./RepML/data/Original_csv/Hyperion.csv')
-df = pd.read_csv('./data/Original_csv/Hyperion.csv')
+df = pd.read_csv('./RepML/data/Original_csv/Hyperion.csv')
+#df = pd.read_csv('./data/Original_csv/Hyperion.csv')
 
 def find_char_bounds(spans: list, text: str) -> list:
     '''
