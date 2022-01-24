@@ -92,6 +92,11 @@ for row in df.itertuples():
         sample['Repertori'] = [row.Repertorio]
         dataset.append(sample)
         
+for i,sample in enumerate(dataset):
+    sample['Bounds'] = find_char_bounds(sample['Stralci'], sample['Testo'])
+    sample['Word_Bounds'] = find_word_bounds(sample['Stralci'], sample['Testo'])
+    sample['Tags'] = IE_gen(sample['Bounds'], sample['Testo'])
+        
 IE_dict = {
     'Testo': [sample['Testo'] for sample in dataset],
     'Tags': [sample['Tags'] for sample in dataset],
