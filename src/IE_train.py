@@ -134,6 +134,7 @@ class IE_Hyperion_dataset(Dataset):
         char_labels = encode_labels(list(self.df['Tags'].iloc[idx]))
 
         encoded_labels = np.ones(len(encoding['input_ids']), dtype=int) * -100
+        last_token_idx = max(index for index, item in enumerate(encoding['special_tokens_mask']) if item == 0)
         for idx, e in enumerate(encoding['offset_mapping']):
             if e[1] != 0:
                 # overwrite label
@@ -141,6 +142,7 @@ class IE_Hyperion_dataset(Dataset):
                     encoded_labels [idx] = 0
                 else:
                     encoded_labels [idx] = 1
+        encoded_labels[last_token_idx] = 0
 
 
         item = {key: torch.as_tensor(val) for key, val in encoding.items()}
