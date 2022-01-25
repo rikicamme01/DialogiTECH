@@ -289,6 +289,7 @@ class MPTrainer():
 
         # Setup for testing with gpu
         device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+        model.to(device)
 
         print("")
         print("Running Test...")
