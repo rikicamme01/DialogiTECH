@@ -131,3 +131,7 @@ dmypy.json
 # custom
 *.sif
 **/.neptune
+
+# Mac os ß
+.DS_Store
+Desktop.ini
