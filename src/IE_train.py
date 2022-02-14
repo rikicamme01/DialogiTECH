@@ -83,15 +83,17 @@ for row in df.itertuples():
     text = row.Testo
     
     if pd.isna(text):
-        span =  re.sub(r'[\?\.\!]+(?=[\?\.\!])', '', row.Stralcio)
+        #span =  re.sub(r'[\?\.\!]+(?=[\?\.\!])', '', row.Stralcio)
+        span = row.Stralcio
         sample['Stralci'].append(span)
         sample['Repertori'].append(row.Repertorio)
 
     else:
         sample = {}
-        text = re.sub(r'[\?\.\!]+(?=[\?\.\!])', '', text)
+        #text = re.sub(r'[\?\.\!]+(?=[\?\.\!])', '', text)
         sample['Testo'] = text
-        span =  re.sub(r'[\?\.\!]+(?=[\?\.\!])', '', row.Stralcio)
+        #span =  re.sub(r'[\?\.\!]+(?=[\?\.\!])', '', row.Stralcio)
+        span = row.Stralcio
         sample['Stralci'] = [span]
 
         sample['Repertori'] = [row.Repertorio]
@@ -669,7 +671,7 @@ print('----------------------------------------------------------')
 print('Risultati labels GT e stralci uniti')
 
 n_spans = 0
-for e in test_df['Token_bounds']:
+for e in test_dataset.df['Token_bounds']:
     n_spans += len(e)
 print('Numero stralci nel dataset:', str(n_spans))
 
