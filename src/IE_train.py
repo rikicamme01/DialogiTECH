@@ -21,6 +21,7 @@ import neptune.new as neptune
 import time
 import datetime
 from torch.nn import utils
+import re
 
 import torchmetrics
 import torch
@@ -80,17 +81,23 @@ dataset = []
 
 for row in df.itertuples():
     text = row.Testo
+    
     if pd.isna(text):
-        sample['Stralci'].append(row.Stralcio)
+        span =  re.sub(r'[\?\.\!]+(?=[\?\.\!])', '', row.Stralcio)
+        sample['Stralci'].append(span)
         sample['Repertori'].append(row.Repertorio)
-        
-    else: 
+
+    else:
         sample = {}
+        text = re.sub(r'[\?\.\!]+(?=[\?\.\!])', '', text)
         sample['Testo'] = text
-        sample['Stralci'] = [row.Stralcio]
-        
+        span =  re.sub(r'[\?\.\!]+(?=[\?\.\!])', '', row.Stralcio)
+        sample['Stralci'] = [span]
+
         sample['Repertori'] = [row.Repertorio]
         dataset.append(sample)
+
+
 
 for i,sample in enumerate(dataset):
     sample['Bounds'] = find_char_bounds(sample['Stralci'], sample['Testo'])
@@ -100,9 +107,11 @@ IE_dict = {
     'Testo': [sample['Testo'] for sample in dataset],
     'Tags': [sample['Tags'] for sample in dataset],
     'Bounds': [sample['Bounds'] for sample in dataset],
-    'Repertori': [sample['Repertori'] for sample in dataset]
+    'Repertori': [sample['Repertori'] for sample in dataset],
+    'Stralci': [sample['Stralci'] for sample in dataset]
 }
 IE_df = pd.DataFrame(IE_dict)
+IE_df = IE_df
 
 LABELS = [
                 'I',
@@ -132,18 +141,27 @@ class IE_Hyperion_dataset(Dataset):
                                   truncation=True,
                                   )
         char_labels = encode_labels(list(self.df['Tags'].iloc[idx]))
+        ends = [i for i in range(len(char_labels)) if char_labels[i] == 0]
+
+        last_token_idx = max(index for index, item in enumerate(encoding['special_tokens_mask']) if item == 0)
 
         encoded_labels = np.ones(len(encoding['input_ids']), dtype=int) * -100
-        last_token_idx = max(index for index, item in enumerate(encoding['special_tokens_mask']) if item == 0)
-        for idx, e in enumerate(encoding['offset_mapping']):
+        x = ends.pop(0)
+        for i,e in enumerate(encoding['offset_mapping']):
             if e[1] != 0:
                 # overwrite label
-                if 0 in char_labels[e[0]:e[1]]:
-                    encoded_labels [idx] = 0
+                if x >= e[0] and x <= e[1]:
+                    encoded_labels[i] = 0
+                    if ends: 
+                        x = ends.pop(0)
+                    else:
+                        x = -1
                 else:
-                    encoded_labels [idx] = 1
-        encoded_labels[last_token_idx] = 0
+                    encoded_labels[i] = 1
+        if not 0 in encoded_labels:
+            encoded_labels[last_token_idx] = 0
 
+        
 
         item = {key: torch.as_tensor(val) for key, val in encoding.items()}
         item['labels'] = torch.as_tensor(encoded_labels)
@@ -518,28 +536,35 @@ trainer = IE_MPTrainer(batch_size, learning_rate, n_epochs)
 trainer.fit(model, train_dataset, val_dataset)
 pred = trainer.test(model,test_dataset)
 
-def pred_to_bounds(pred: list):
-    dataset_bounds = []
-    for e in pred:
-        start = 0
-        end = 0
-        bounds = []
-        for i, tok_pred in enumerate(e):
-            if tok_pred == 0:
-                end = i
-                bounds.append((start, end))
-                start = end + 1
-        dataset_bounds.append(bounds)
-    return dataset_bounds
+def prediction_to_bounds(pred:list) -> list:
+    bounds = []
+    start = 0
+    end = 0
+    for i,e in enumerate(pred):
+        if e == 0:
+            end = i
+            bounds.append((start, end))
+            start = end + 1
+    return bounds
 
 
-bert_pred = pred_to_bounds(pred)
+bert_preds = []
+for e in pred:
+    bert_preds.append(prediction_to_bounds(e))
+
 gt_bounds = []
-for sample in test_dataset:
-    gt_bounds.append(pred_to_bounds([sample['labels']])[0])
-test_df['Subword_bounds'] = gt_bounds
+for e in test_dataset:
+    gt_bounds.append(prediction_to_bounds(e['labels']))
+test_dataset.df['Token_bounds'] = gt_bounds
 
 def IoU(A, B):
+    '''
+    Given two intervals, find the intersection over union between them.
+    
+    :param A: The first bounding box
+    :param B: The bounding box
+    :return: the intersection over union of the two bounding boxes.
+    '''
     if A == B:
         return 1
     start = max(A[0], B[0])
@@ -549,13 +574,20 @@ def IoU(A, B):
     intersection = end - start
     return intersection / (A[1] - A[0] + B[1] - B[0] - intersection)
 
-
 def compute_IoUs(pred_bounds, gt_spans):
+    '''
+    Given a list of predicted spans and a list of ground truth spans, 
+    compute the intersection over union for each pair of spans
+    
+    :param pred_bounds: a tuple of (start, end) denoting the predicted answer
+    :param gt_spans: a list of tuples of the form (start, end) representing the spans of each ground
+    truth annotation
+    :return: a list of IoUs for each ground truth span.
+    '''
     IoUs = []
     for gt_bounds in gt_spans:
-        IoUs.append(IoU(pred_bounds, gt_bounds))
+        IoUs.append(IoU(pred_bounds, gt_bounds)) 
     return IoUs
-
 
 def normalize(text_spans_dict, gt_spans):
     normalized = []
@@ -563,42 +595,41 @@ def normalize(text_spans_dict, gt_spans):
         #normalized is not empty
         if normalized:
             if normalized[-1]['Repertorio'] == text_spans_dict[i]['Repertorio']:
-                new_span = (normalized[-1]['Bounds'][0],
-                            text_spans_dict[i]['Bounds'][1])
+                new_span = (normalized[-1]['Bounds'][0], text_spans_dict[i]['Bounds'][1])
                 new_span_features = {
-                    'Bounds': new_span,
-                    'IoU': None,
-                    'Repertorio': text_spans_dict[i]['Repertorio']
-                }
+                    'Bounds' : new_span, 
+                    'IoU' : None,
+                    'Repertorio' : text_spans_dict[i]['Repertorio']
+                    }
                 del normalized[-1]
                 normalized.append(new_span_features)
             else:
                 normalized.append(text_spans_dict[i])
         else:
             normalized.append(text_spans_dict[i])
-
+        
+    
     for i in range(len(normalized)):
-        normalized[i]['IoU'] = max(compute_IoUs(
-            normalized[i]['Bounds'], gt_spans['Bounds']))
+        normalized[i]['IoU'] = max(compute_IoUs(normalized[i]['Bounds'], gt_spans['Token_bounds']))
     return normalized
-
+    
 
 metrics = []
 normalized_metrics = []
-for i, pred_bounds in enumerate(bert_pred):
+for i, pred_bounds in enumerate(bert_preds):
     text_IoUs = []
     for pred_span in pred_bounds:
-        IoUs = compute_IoUs(pred_span, test_df.iloc[i]['Subword_bounds'])
+        IoUs = compute_IoUs(pred_span, test_dataset.df.iloc[i]['Token_bounds'])   
         best = np.argmax(IoUs)
         span_features = {
-            'Bounds': pred_span,
-            'IoU': IoUs[best],
-            'Repertorio': test_df.iloc[i]['Repertori'][best]
-        }
+            'Bounds' : pred_span, 
+            'IoU' : IoUs[best],
+            'Repertorio' : test_dataset.df.iloc[i]['Repertori'][best]
+            }
 
         text_IoUs.append(span_features)
     metrics.append(text_IoUs)
-    normalized_metrics.append(normalize(text_IoUs, test_df.iloc[i]))
+    normalized_metrics.append(normalize(text_IoUs, test_dataset.df.iloc[i]))
 
 
 print('----------------------------------------------------------')
@@ -606,7 +637,7 @@ print('Risultati labels GT e stralci non uniti')
 
 
 n_spans = 0
-for e in test_df['Subword_bounds']:
+for e in test_dataset.df['Token_bounds']:
     n_spans += len(e)
 print('Numero stralci nel dataset:', str(n_spans))
 
@@ -637,9 +668,8 @@ print('Percentuale span perfetti: ', str(perfect_spans_perc))
 print('----------------------------------------------------------')
 print('Risultati labels GT e stralci uniti')
 
-
 n_spans = 0
-for e in test_df['Subword_bounds']:
+for e in test_df['Token_bounds']:
     n_spans += len(e)
 print('Numero stralci nel dataset:', str(n_spans))
 
