@@ -77,27 +77,35 @@ def IE_gen(bounds: list, text:str) -> str:
     return ''.join(tags)
 
 
+def clean_text(text:str) -> str:
+    #delete double punctuation
+    text =  re.sub(r'[\?\.\!]+(?=[\?\.\!])', '', text)
+    # add space between a word and punctuation
+    text = re.sub('(?<! )(?=[.,!?()])|(?<=[.,!?()])(?! )', r' ', text)
+    return text
+
 dataset = []
 
 for row in df.itertuples():
     text = row.Testo
     
     if pd.isna(text):
-        #span =  re.sub(r'[\?\.\!]+(?=[\?\.\!])', '', row.Stralcio)
-        span = row.Stralcio
-        sample['Stralci'].append(span)
+        sample['Stralci'].append(clean_text(row.Stralcio))
         sample['Repertori'].append(row.Repertorio)
 
     else:
         sample = {}
-        #text = re.sub(r'[\?\.\!]+(?=[\?\.\!])', '', text)
-        sample['Testo'] = text
-        #span =  re.sub(r'[\?\.\!]+(?=[\?\.\!])', '', row.Stralcio)
-        span = row.Stralcio
-        sample['Stralci'] = [span]
+        sample['Testo'] = clean_text(text)
+        sample['Stralci'] = [clean_text(row.Stralcio)]
 
         sample['Repertori'] = [row.Repertorio]
         dataset.append(sample)
+
+
+
+for i,sample in enumerate(dataset):
+    sample['Bounds'] = find_char_bounds(sample['Stralci'], sample['Testo'])
+    sample['Tags'] = IE_gen(sample['Bounds'], sample['Testo'])
 
 
 
@@ -547,7 +555,19 @@ def prediction_to_bounds(pred:list) -> list:
             end = i
             bounds.append((start, end))
             start = end + 1
+    if not bounds:
+        bounds.append((0, len(pred)))
     return bounds
+
+
+bert_preds = []
+for e in pred:
+    bert_preds.append(prediction_to_bounds(e))
+
+gt_bounds = []
+for e in test_dataset:
+    gt_bounds.append(prediction_to_bounds(e['labels']))
+test_dataset.df['Token_bounds'] = gt_bounds
 
 
 bert_preds = []
