@@ -559,6 +559,19 @@ def prediction_to_bounds(pred:list) -> list:
         bounds.append((0, len(pred)))
     return bounds
 
+def token_gt_bounds(pred:list) -> list:
+    bounds = []
+    start = 0
+    end = 0
+    for i,e in enumerate(pred[1:]):
+        if e == 0:
+            end = i
+            bounds.append((start, end))
+            start = end + 1
+    if not bounds:
+        bounds.append((0, len(pred)))
+    return bounds
+
 
 bert_preds = []
 for e in pred:
@@ -566,17 +579,7 @@ for e in pred:
 
 gt_bounds = []
 for e in test_dataset:
-    gt_bounds.append(prediction_to_bounds(e['labels']))
-test_dataset.df['Token_bounds'] = gt_bounds
-
-
-bert_preds = []
-for e in pred:
-    bert_preds.append(prediction_to_bounds(e))
-
-gt_bounds = []
-for e in test_dataset:
-    gt_bounds.append(prediction_to_bounds(e['labels']))
+    gt_bounds.append(token_gt_bounds(e['labels']))
 test_dataset.df['Token_bounds'] = gt_bounds
 
 def IoU(A, B):
