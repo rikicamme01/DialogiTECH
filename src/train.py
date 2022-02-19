@@ -30,6 +30,7 @@ test_df = pd.read_csv('./RepML/data/Splitted_full/Hyperion_test.csv', na_filter=
 #test_df = pd.read_csv('./data/Splitted_full/Hyperion_test.csv', na_filter=False)
 
 model_name = sys.argv[3]
+#model_name = "xlm-roberta-large"
 #model_name = "m-polignano-uniba/bert_uncased_L-12_H-768_A-12_italian_alb3rt0"
 #model_name = "dbmdz/bert-base-italian-xxl-uncased"
 #model_name = "bert-base-multilingual-cased"
