@@ -22,8 +22,12 @@ n_epochs = int(sys.argv[2])
 seed_everything(4321)
 
 #cluster paths
-df = pd.read_csv('./RepML/data/Splitted_full/Hyperion_train.csv', na_filter=False)
-test_df = pd.read_csv('./RepML/data/Splitted_full/Hyperion_test.csv', na_filter=False)
+#df = pd.read_csv('./RepML/data/Splitted_full/Hyperion_train.csv', na_filter=False)
+#test_df = pd.read_csv('./RepML/data/Splitted_full/Hyperion_test.csv', na_filter=False)
+
+#sagemaker paths
+df = pd.read_csv('../data/Splitted_full/Hyperion_train.csv', na_filter=False)
+test_df = pd.read_csv('../data/Splitted_full/Hyperion_test.csv', na_filter=False)
 
 #local paths
 #df = pd.read_csv('./data/Splitted_full/Hyperion_train.csv', na_filter=False)
