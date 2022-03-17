@@ -1,59 +1,71 @@
 import pandas as pd
+df = pd.read_csv('./RepML/data/Union/Hyperion.csv')
+
 import string
-import nltk
-nltk.download('punkt')
-from nltk import sent_tokenize
 import re
-import numpy as np
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
-import torch
-from sklearn import preprocessing
-from transformers import AutoTokenizer
-from torch.utils.data import TensorDataset
-from torch.utils.data import DataLoader
-from torch.nn import utils
-from torch.utils.data import DataLoader
-import neptune.new as neptune
 
-
-#Neptune initialization
-run = neptune.init(
-    project="mibo8/Rep",
-    api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiJmZmRkYThiZi1mZGNlLTRlMTktODQwNS1hNWFlMWQ2Mjc4N2IifQ==",
-)
-
-df = pd.read_csv('./RepML/data/Original_csv/Hyperion.csv', na_filter=False)
+def clean_text(text:str) -> str:
+    #delete double punctuation
+    text =  re.sub(r'[\?\.\!]+(?=[\?\.\!])', '', text)
+    # add space between a word and punctuation
+    text = re.sub('(?<! )(?=[.,!?()])|(?<=[.,!?()])(?! )', r' ', text)
+    return text
 
 dataset = []
-sample = {}
 
 for row in df.itertuples():
     text = row.Testo
-    if text and len(text) > 4:
-        dataset.append(sample)
-        sample = {}
-        sample['Testo'] = text
-        sample['Stralci'] = [row.Stralcio]
-        sample['Repertori'] = [row.Repertorio]
-        
-    else:
-        sample['Stralci'].append(row.Stralcio)
+    
+    if pd.isna(text):
+        sample['Stralci'].append(clean_text(row.Stralcio))
         sample['Repertori'].append(row.Repertorio)
-del dataset[0]
+
+    else:
+        sample = {}
+        sample['Testo'] = clean_text(text)
+        sample['Stralci'] = [clean_text(row.Stralcio)]
+
+        sample['Repertori'] = [row.Repertorio]
+        dataset.append(sample)
+
+
 
 #Find bounds starting froma text
 def find_char_bounds(spans: list, text: str) -> list:
+    '''
+    Given a list of spans and a text, find the start and end indices of each span in the text.
+    Indeces are computed counting CHARS
+    
+    :param spans: a list of strings to search for
+    :type spans: list
+    :param text: the text to search
+    :type text: str
+    :return: A list of tuples, where each tuple contains the start and end index of a span.
+    '''
+    start = 0
     bounds = []
-    last_char = 0
+    last_char = -1
     for span in spans:
         start = text.find(span)
         if start == -1:
             start = last_char + 1
-        bounds.append((start, start + len(span)))
         last_char = start + len(span)
+        bounds.append((start, last_char))
+        
     return bounds
 
+
 def find_word_bounds(spans: list, text: str) -> list:
+    '''
+    Given a list of spans and a text, find the start and end indices of each span in the text.
+    Indeces are computed counting WORDS.
+
+    :param spans: a list of strings, each string is a span of text
+    :type spans: list
+    :param text: the text to be searched
+    :type text: str
+    :return: A list of tuples, where each tuple is the start and end index of a word in the text.
+    '''
     bounds = []
     end = 0
     for span in spans:
@@ -73,31 +85,60 @@ def find_word_bounds(spans: list, text: str) -> list:
         bounds.append((start, end))
     return bounds
 
+def find_segmentation(bounds, text):
+    text_list = text.translate(str.maketrans('', '', string.punctuation)).split()
+    segmentation = ['0' for i in range(len(text_list))]
+    segmentation[-1] = '1'
+    
+    ends = []
+    end = 0
+    for span in spans:
+        word_list = span.translate(str.maketrans('', '', string.punctuation)).split()
+        try:
+            end = text_list.index(word_list[-1], end)
+        except:
+                end = end + len(word_list) -1
+        if end < len(text_list):
+            ends.append(end)
+    for i in ends:
+        segmentation[i] = '1'
+    
+    return ''.join(segmentation)
+
+def find_segmentation_by_bounds(bounds: list, text: str) -> str:
+    segmentation = ['0' for i in range(len(text))]
+    for bound in bounds:
+        if bound[1] < len(text):
+            segmentation[bound[1]] = '1'
+        else:
+            segmentation[-1] = '1'
+    return ''.join(segmentation)
+    
+    
 
 for sample in dataset:
-    #sample['Bounds'] = find_char_bounds(sample['Stralci'], sample['Testo'])
     sample['Bounds'] = find_word_bounds(sample['Stralci'], sample['Testo'])
+    sample['Segmentation'] = find_segmentation_by_bounds(sample['Bounds'], sample['Testo'])
 
+
+import nltk
+nltk.download('punkt')
+from nltk import sent_tokenize
+import re
 
 nltk_pred = []
 spans_pred = []
 
 for sample in dataset:
-    tokens = sent_tokenize(sample['Testo'])
-    spans = []
-    bounds = []
-    """
-    for x in tokens:
-        #spans += re.findall('.*?[.:!?;,]', x)
-        spans += re.split('[]', x)
-        spans = list(filter(None, spans)) # filter empty strings
-    """
-    #bounds += find_char_bounds(spans, sample['Testo'])
-    bounds += find_word_bounds(tokens, sample['Testo'])
+    spans = sent_tokenize(sample['Testo'])
+    bounds = []    
+    #bounds += find_char_bounds([sample['Testo']], sample['Testo'])
+    bounds += find_word_bounds(spans, sample['Testo'])
     nltk_pred.append(bounds)
-    spans_pred.append(tokens) 
+    spans_pred.append(spans) 
 
 
+import numpy as np
 # A è B sono tupe con i bound dello span
 def IoU(A, B):
     if A == B:
@@ -110,6 +151,15 @@ def IoU(A, B):
     return intersection / (A[1] - A[0] + B[1] - B[0] - intersection)
 
 def compute_IoUs(pred_bounds, gt_spans):
+    """
+    Given a list of predicted spans and a list of ground truth spans, 
+    compute the IoU between each pair of spans
+    
+    :param pred_bounds: a tuple of (start, end) denoting the predicted answer
+    :param gt_spans: a list of tuples of the form (start, end) representing the spans of each ground
+    truth annotation
+    :return: a list of IoUs for each ground truth span.
+    """
     IoUs = []
     for gt_bounds in gt_spans:
         IoUs.append(IoU(pred_bounds, gt_bounds)) 
@@ -143,29 +193,107 @@ def normalize(text_spans_dict, gt_spans):
     for i in range(len(normalized)):
         normalized[i]['IoU'] = max(compute_IoUs(normalized[i]['Bounds'], gt_spans['Bounds']))
     return normalized
+
+def intersection(A, B):
+    if A == B:
+        return 1
+    start = max(A[0], B[0])
+    end = min(A[1], B[1])
+    if(start > end):
+        return 0
+    return end - start
+
+def normalize_bounds_by_repertoire(bounds, sample):
+    bounds_w_rep = []
+    for bound in bounds:
+        intersections = []
+        for gt_bound in sample['Bounds']:
+            intersections.append(intersection(bound, gt_bound))
+        rep_idx = np.argmax(intersections)
+        bounds_w_rep.append({
+            'Bounds': bound,
+            'Repertorio': sample['Repertori'][rep_idx]
+            })
+    normalized = []
+    for i in range(len(bounds_w_rep)):
+        #normalized is not empty
+        if normalized:
+            if normalized[-1]['Repertorio'] == bounds_w_rep[i]['Repertorio']:
+                new_span = (normalized[-1]['Bounds'][0], bounds_w_rep[i]['Bounds'][1])
+                new_span_features = {
+                    'Bounds' : new_span, 
+                    'Repertorio' : bounds_w_rep[i]['Repertorio']
+                    }
+                del normalized[-1]
+                normalized.append(new_span_features)
+            else:
+                normalized.append(bounds_w_rep[i])
+        else:
+            normalized.append(bounds_w_rep[i])
+    return [e['Bounds'] for e in normalized]
+
+
+from nltk.metrics.segmentation import windowdiff, ghd, pk
+
+met_list = []
+
+
+for i,sample in enumerate(dataset):
+    seg_pred = find_segmentation_by_bounds(nltk_pred[i], sample['Testo'])
     
+    wd_value = windowdiff(sample['Segmentation'], seg_pred,  6)
+    
+    ghd_value = ghd(sample['Segmentation'], seg_pred)
+    
+    pk_value = pk(sample['Segmentation'], seg_pred, 6)
 
-metrics = []
-normalized_metrics = []
-for i, pred_bounds in enumerate(nltk_pred):
     text_IoUs = []
-    for pred_span in pred_bounds:
-        IoUs = compute_IoUs(pred_span, dataset[i]['Bounds'])
+    for bound in nltk_pred[i]:
+        IoUs = compute_IoUs(bound, sample['Bounds'])
         best = np.argmax(IoUs)
-        span_features = {
-            'Bounds' : pred_span, 
-            'IoU' : IoUs[best],
-            'Repertorio' : dataset[i]['Repertori'][best]
-            }
+        text_IoUs.append(IoUs[best])
+    
+    met_dict = {
+        'windowdiff' : wd_value,
+        'ghd' : ghd_value,
+        'pk' : pk_value,
+        'iou' : text_IoUs
+        }
+    met_list.append(met_dict)
 
-        text_IoUs.append(span_features)
-    metrics.append(text_IoUs)
-    normalized_metrics.append(normalize(text_IoUs, dataset[i]))
+norm_met_list = []
+norm_span_counter = 0
 
+for i,sample in enumerate(dataset):
+    norm_pred_bounds = normalize_bounds_by_repertoire(nltk_pred[i], sample)
+    norm_span_counter += len(norm_pred_bounds)
+
+    seg_pred = find_segmentation_by_bounds(norm_pred_bounds, sample['Testo'])
+    
+    wd_value = windowdiff(sample['Segmentation'], seg_pred,  6)
+    
+    ghd_value = ghd(sample['Segmentation'], seg_pred)
+    
+    pk_value = pk(sample['Segmentation'], seg_pred, 6)
+
+    text_IoUs = []
+    for bound in norm_pred_bounds:
+        IoUs = compute_IoUs(bound, sample['Bounds'])
+        best = np.argmax(IoUs)
+        text_IoUs.append(IoUs[best])
+    
+    norm_met_dict = {
+        'windowdiff' : wd_value,
+        'ghd' : ghd_value,
+        'pk' : pk_value,
+        'iou' : text_IoUs
+        }
+    norm_met_list.append(norm_met_dict)
 
 print('----------------------------------------------------------')
 print('Risultati labels GT e stralci non uniti')
 
+print('Numero testi nel dataset:', str(len(dataset)))
 
 n_spans = 0
 for e in dataset:
@@ -173,73 +301,78 @@ for e in dataset:
 print('Numero stralci nel dataset:', str(n_spans))
 
 n_spans = 0
-for e in metrics:
+for e in nltk_pred:
     n_spans += len(e)
 print('Numero stralci predetti:', str(n_spans))
 
-mean = 0
-long_spans = 0
-min_lenght = 0
-perfect_spans =0
-for text in metrics:
-    for span in text:
-        if span['Bounds'][1] - span['Bounds'][0] >= min_lenght:
-            long_spans += 1
-            mean += span['IoU']
-            if span['IoU'] == 1:
-                perfect_spans += 1
-perfect_spans_perc = perfect_spans / long_spans
-mean_IoU = mean / long_spans
-print('Numero stralci con lunghezza minima = ', str(min_lenght), ': ', str(long_spans))
-print('Media IoU:', str(mean_IoU))
-print('Percentuale span perfetti: ', str(perfect_spans_perc))
+IoUs = [e['iou'] for e in met_list]
+flat_IoUs = [item for sublist in IoUs for item in sublist]
+mean_IoU = np.mean(flat_IoUs)
+mean_wd = np.mean([e['windowdiff'] for e in met_list])
+mean_pk = np.mean([e['pk'] for e in met_list])
+mean_ghd = np.mean([e['ghd'] for e in met_list])
 
+perfect_spans = flat_IoUs.count(1)
+print('Percentuale span perfetti: ', str(perfect_spans / len(flat_IoUs)))
+
+print('Media IoU:', str(mean_IoU))
+print('Media Windowdiff:', str(mean_wd))
+print('Media Pk:', str(mean_pk))
+print('Media ghd:', str(mean_ghd))
 
 
 print('----------------------------------------------------------')
 print('Risultati labels GT e stralci uniti')
 
+print('Numero testi nel dataset:', str(len(dataset)))
 
 n_spans = 0
 for e in dataset:
     n_spans += len(e['Bounds'])
 print('Numero stralci nel dataset:', str(n_spans))
 
-n_spans = 0
-for e in normalized_metrics:
-    n_spans += len(e)
-print('Numero stralci predetti:', str(n_spans))
+print('Numero stralci predetti:', str(norm_span_counter))
 
-mean = 0
-long_spans = 0
-min_lenght = 0
-perfect_spans =0
-for text in normalized_metrics:
-    for span in text:
-        if span['Bounds'][1] - span['Bounds'][0] >= min_lenght:
-            long_spans += 1
-            mean += span['IoU']
-            if span['IoU'] == 1:
-                perfect_spans += 1
-perfect_spans_perc = perfect_spans / long_spans
-mean_IoU = mean / long_spans
-print('Numero stralci con lunghezza minima = ', str(min_lenght), ': ', str(long_spans))
+IoUs = [e['iou'] for e in norm_met_list]
+flat_IoUs = [item for sublist in IoUs for item in sublist]
+mean_IoU = np.mean(flat_IoUs)
+mean_wd = np.mean([e['windowdiff'] for e in norm_met_list])
+mean_pk = np.mean([e['pk'] for e in norm_met_list])
+mean_ghd = np.mean([e['ghd'] for e in norm_met_list])
+
+perfect_spans = flat_IoUs.count(1)
+
+print('Percentuale span perfetti: ', str(perfect_spans / len(flat_IoUs)))
+
 print('Media IoU:', str(mean_IoU))
-print('Percentuale span perfetti: ', str(perfect_spans_perc))
+print('Media Windowdiff:', str(mean_wd))
+print('Media Pk:', str(mean_pk))
+print('Media ghd:', str(mean_ghd))
 
 
-#--------------SPAN CLASSIFICATION-------------
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 model = AutoModelForSequenceClassification.from_pretrained('MiBo/RepML')
-tokenizer = AutoTokenizer.from_pretrained("m-polignano-uniba/bert_uncased_L-12_H-768_A-12_italian_alb3rt0")
+tokenizer = AutoTokenizer.from_pretrained("dbmdz/bert-base-italian-xxl-uncased")
+
 
 predicted_dataset = []
+
+
 for i, span_group in enumerate(spans_pred):
   text_features = {}
   text_features['Testo'] = dataset[i]['Testo']
   text_features['Stralci'] = [span.lower() for span in span_group]
   text_features['Bounds'] = nltk_pred[i]
   predicted_dataset.append(text_features)
+
+
+import re
+
+import pandas as pd
+import torch
+from sklearn import preprocessing
+from transformers import AutoTokenizer
 
 LABELS = [
                 'anticipazione',
@@ -273,11 +406,12 @@ def decode_labels(encoded_labels):
     le.fit(LABELS)
     return le.inverse_transform(encoded_labels)
 
-# Setup for testing with gpu
-device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-model.to(device)
-model.eval()
 
+from torch.utils.data import TensorDataset
+from torch.utils.data import DataLoader
+from torch.nn import utils
+import torch
+from torch.utils.data import DataLoader
 
 def predict_labels(text: dict)-> list:
   pred = []
@@ -312,6 +446,12 @@ def predict_labels(text: dict)-> list:
       pred += batch_pred.argmax(dim=1)
   return pred
 
+
+# Setup for testing with gpu
+device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+model.to(device)
+model.eval()
+
 for i, text in enumerate(predicted_dataset):
   pred = predict_labels(text)
   rep = decode_labels(list(pred))
@@ -320,27 +460,68 @@ for i, text in enumerate(predicted_dataset):
   if i%100==0:
     print('testo: ', str(i))
 
-metrics = []
-normalized_metrics = []
-for i, sample in enumerate(predicted_dataset):
+
+met_list = []
+
+
+for i,sample in enumerate(predicted_dataset):
+    seg_pred = find_segmentation_by_bounds(nltk_pred[i], sample['Testo'])
+    
+    wd_value = windowdiff(sample['Segmentation'], seg_pred,  6)
+    
+    ghd_value = ghd(sample['Segmentation'], seg_pred)
+    
+    pk_value = pk(sample['Segmentation'], seg_pred, 6)
+
     text_IoUs = []
-    for j, pred_bounds in enumerate(sample['Bounds']):
-        IoUs = compute_IoUs(pred_bounds, dataset[i]['Bounds'])
+    for bound in nltk_pred[i]:
+        IoUs = compute_IoUs(bound, sample['Bounds'])
         best = np.argmax(IoUs)
-        span_features = {
-            'Bounds' : pred_bounds, 
-            'IoU' : IoUs[best],
-            'Repertorio' : predicted_dataset[i]['Repertori'][j]
-            }
+        text_IoUs.append(IoUs[best])
+    
+    met_dict = {
+        'windowdiff' : wd_value,
+        'ghd' : ghd_value,
+        'pk' : pk_value,
+        'iou' : text_IoUs
+        }
+    met_list.append(met_dict)
 
-        text_IoUs.append(span_features)
-    metrics.append(text_IoUs)
-    normalized_metrics.append(normalize(text_IoUs, dataset[i]))
+
+norm_met_list = []
+norm_span_counter = 0
+
+for i,sample in enumerate(predicted_dataset):
+    norm_pred_bounds = normalize_bounds_by_repertoire(nltk_pred[i], sample)
+    norm_span_counter += len(norm_pred_bounds)
+
+    seg_pred = find_segmentation_by_bounds(norm_pred_bounds, sample['Testo'])
+    
+    wd_value = windowdiff(sample['Segmentation'], seg_pred,  6)
+    
+    ghd_value = ghd(sample['Segmentation'], seg_pred)
+    
+    pk_value = pk(sample['Segmentation'], seg_pred, 6)
+
+    text_IoUs = []
+    for bound in norm_pred_bounds:
+        IoUs = compute_IoUs(bound, sample['Bounds'])
+        best = np.argmax(IoUs)
+        text_IoUs.append(IoUs[best])
+    
+    norm_met_dict = {
+        'windowdiff' : wd_value,
+        'ghd' : ghd_value,
+        'pk' : pk_value,
+        'iou' : text_IoUs
+        }
+    norm_met_list.append(norm_met_dict)
 
 
 print('----------------------------------------------------------')
-print('Risultati labels predette e stralci NON uniti')
+print('Risultati labels GT e stralci non uniti')
 
+print('Numero testi nel dataset:', str(len(dataset)))
 
 n_spans = 0
 for e in dataset:
@@ -348,56 +529,21 @@ for e in dataset:
 print('Numero stralci nel dataset:', str(n_spans))
 
 n_spans = 0
-for e in metrics:
+for e in nltk_pred:
     n_spans += len(e)
 print('Numero stralci predetti:', str(n_spans))
 
-mean = 0
-long_spans = 0
-min_lenght = 0
-perfect_spans =0
-for text in metrics:
-    for span in text:
-        if span['Bounds'][1] - span['Bounds'][0] >= min_lenght:
-            long_spans += 1
-            mean += span['IoU']
-            if span['IoU'] == 1:
-                perfect_spans += 1
-perfect_spans_perc = perfect_spans / long_spans
-mean_IoU = mean / long_spans
-print('Numero stralci con lunghezza minima = ', str(min_lenght), ': ', str(long_spans))
+IoUs = [e['iou'] for e in met_list]
+flat_IoUs = [item for sublist in IoUs for item in sublist]
+mean_IoU = np.mean(flat_IoUs)
+mean_wd = np.mean([e['windowdiff'] for e in met_list])
+mean_pk = np.mean([e['pk'] for e in met_list])
+mean_ghd = np.mean([e['ghd'] for e in met_list])
+
+perfect_spans = flat_IoUs.count(1)
+print('Percentuale span perfetti: ', str(perfect_spans / len(flat_IoUs)))
+
 print('Media IoU:', str(mean_IoU))
-print('Percentuale span perfetti: ', str(perfect_spans_perc))
-
-
-print('----------------------------------------------------------')
-print('Risultati labels predette e stralci uniti')
-
-n_spans = 0
-for e in dataset:
-    n_spans += len(e['Bounds'])
-print('Numero stralci nel dataset:', str(n_spans))
-
-n_spans = 0
-for e in normalized_metrics:
-    n_spans += len(e)
-print('Numero stralci predetti:', str(n_spans))
-
-mean = 0
-long_spans = 0
-min_lenght = 0
-perfect_spans =0
-for text in normalized_metrics:
-    for span in text:
-        if span['Bounds'][1] - span['Bounds'][0] >= min_lenght:
-            long_spans += 1
-            mean += span['IoU']
-            if span['IoU'] == 1:
-                perfect_spans += 1
-perfect_spans_perc = perfect_spans / long_spans
-mean_IoU = mean / long_spans
-print('Numero stralci con lunghezza minima = ', str(min_lenght), ': ', str(long_spans))
-print('Media IoU:', str(mean_IoU))
-print('Percentuale span perfetti: ', str(perfect_spans_perc))
-
-
+print('Media Windowdiff:', str(mean_wd))
+print('Media Pk:', str(mean_pk))
+print('Media ghd:', str(mean_ghd))
