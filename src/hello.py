@@ -364,6 +364,7 @@ for i, span_group in enumerate(spans_pred):
   text_features['Testo'] = dataset[i]['Testo']
   text_features['Stralci'] = [span.lower() for span in span_group]
   text_features['Bounds'] = nltk_pred[i]
+  text_features['Segmentation'] = find_segmentation_by_bounds(nltk_pred[i], dataset[i]['Testo'])
   predicted_dataset.append(text_features)
 
 
