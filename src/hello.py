@@ -476,7 +476,7 @@ for i,sample in enumerate(predicted_dataset):
 
     text_IoUs = []
     for bound in nltk_pred[i]:
-        IoUs = compute_IoUs(bound, sample['Bounds'])
+        IoUs = compute_IoUs(bound, dataset[i]['Bounds'])
         best = np.argmax(IoUs)
         text_IoUs.append(IoUs[best])
     
@@ -506,7 +506,7 @@ for i,sample in enumerate(predicted_dataset):
 
     text_IoUs = []
     for bound in norm_pred_bounds:
-        IoUs = compute_IoUs(bound, sample['Bounds'])
+        IoUs = compute_IoUs(bound, dataset[i]['Bounds'])
         best = np.argmax(IoUs)
         text_IoUs.append(IoUs[best])
     
@@ -542,6 +542,36 @@ mean_pk = np.mean([e['pk'] for e in met_list])
 mean_ghd = np.mean([e['ghd'] for e in met_list])
 
 perfect_spans = flat_IoUs.count(1)
+print('Percentuale span perfetti: ', str(perfect_spans / len(flat_IoUs)))
+
+print('Media IoU:', str(mean_IoU))
+print('Media Windowdiff:', str(mean_wd))
+print('Media Pk:', str(mean_pk))
+print('Media ghd:', str(mean_ghd))
+
+
+
+print('----------------------------------------------------------')
+print('Risultati labels GT e stralci uniti')
+
+print('Numero testi nel dataset:', str(len(dataset)))
+
+n_spans = 0
+for e in dataset:
+    n_spans += len(e['Bounds'])
+print('Numero stralci nel dataset:', str(n_spans))
+
+print('Numero stralci predetti:', str(norm_span_counter))
+
+IoUs = [e['iou'] for e in norm_met_list]
+flat_IoUs = [item for sublist in IoUs for item in sublist]
+mean_IoU = np.mean(flat_IoUs)
+mean_wd = np.mean([e['windowdiff'] for e in norm_met_list])
+mean_pk = np.mean([e['pk'] for e in norm_met_list])
+mean_ghd = np.mean([e['ghd'] for e in norm_met_list])
+
+perfect_spans = flat_IoUs.count(1)
+
 print('Percentuale span perfetti: ', str(perfect_spans / len(flat_IoUs)))
 
 print('Media IoU:', str(mean_IoU))
