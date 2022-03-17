@@ -461,34 +461,6 @@ for i, text in enumerate(predicted_dataset):
   if i%100==0:
     print('testo: ', str(i))
 
-
-met_list = []
-
-
-for i,sample in enumerate(predicted_dataset):
-    seg_pred = find_segmentation_by_bounds(nltk_pred[i], sample['Testo'])
-    
-    wd_value = windowdiff(sample['Segmentation'], seg_pred,  6)
-    
-    ghd_value = ghd(sample['Segmentation'], seg_pred)
-    
-    pk_value = pk(sample['Segmentation'], seg_pred, 6)
-
-    text_IoUs = []
-    for bound in nltk_pred[i]:
-        IoUs = compute_IoUs(bound, dataset[i]['Bounds'])
-        best = np.argmax(IoUs)
-        text_IoUs.append(IoUs[best])
-    
-    met_dict = {
-        'windowdiff' : wd_value,
-        'ghd' : ghd_value,
-        'pk' : pk_value,
-        'iou' : text_IoUs
-        }
-    met_list.append(met_dict)
-
-
 norm_met_list = []
 norm_span_counter = 0
 
@@ -498,11 +470,11 @@ for i,sample in enumerate(predicted_dataset):
 
     seg_pred = find_segmentation_by_bounds(norm_pred_bounds, sample['Testo'])
     
-    wd_value = windowdiff(sample['Segmentation'], seg_pred,  6)
+    wd_value = windowdiff(dataset[i]['Segmentation'], seg_pred,  6)
     
-    ghd_value = ghd(sample['Segmentation'], seg_pred)
+    ghd_value = ghd(dataset[i]['Segmentation'], seg_pred)
     
-    pk_value = pk(sample['Segmentation'], seg_pred, 6)
+    pk_value = pk(dataset[i]['Segmentation'], seg_pred, 6)
 
     text_IoUs = []
     for bound in norm_pred_bounds:
@@ -517,39 +489,6 @@ for i,sample in enumerate(predicted_dataset):
         'iou' : text_IoUs
         }
     norm_met_list.append(norm_met_dict)
-
-
-print('----------------------------------------------------------')
-print('Risultati labels GT e stralci non uniti')
-
-print('Numero testi nel dataset:', str(len(dataset)))
-
-n_spans = 0
-for e in dataset:
-    n_spans += len(e['Bounds'])
-print('Numero stralci nel dataset:', str(n_spans))
-
-n_spans = 0
-for e in nltk_pred:
-    n_spans += len(e)
-print('Numero stralci predetti:', str(n_spans))
-
-IoUs = [e['iou'] for e in met_list]
-flat_IoUs = [item for sublist in IoUs for item in sublist]
-mean_IoU = np.mean(flat_IoUs)
-mean_wd = np.mean([e['windowdiff'] for e in met_list])
-mean_pk = np.mean([e['pk'] for e in met_list])
-mean_ghd = np.mean([e['ghd'] for e in met_list])
-
-perfect_spans = flat_IoUs.count(1)
-print('Percentuale span perfetti: ', str(perfect_spans / len(flat_IoUs)))
-
-print('Media IoU:', str(mean_IoU))
-print('Media Windowdiff:', str(mean_wd))
-print('Media Pk:', str(mean_pk))
-print('Media ghd:', str(mean_ghd))
-
-
 
 print('----------------------------------------------------------')
 print('Risultati labels GT e stralci uniti')
