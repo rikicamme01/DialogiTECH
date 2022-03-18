@@ -307,7 +307,8 @@ class IE_MPTrainer():
         self.learning_rate = lr
         self.n_epochs = n_epochs
 
-        self.logger = NeptuneLogger()
+        #self.logger = NeptuneLogger()
+        self.logger = None
 
     def fit(self, model, train_dataset, val_dataset):
         self.logger.run['model'] = model_name
