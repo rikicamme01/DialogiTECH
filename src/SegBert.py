@@ -214,6 +214,11 @@ train_dataset = IE_Hyperion_dataset(train_df, model_name)
 val_dataset = IE_Hyperion_dataset(val_df, model_name)
 test_dataset = IE_Hyperion_dataset(test_df, model_name)
 
+
+from transformers import AutoModelForTokenClassification
+model = AutoModelForTokenClassification.from_pretrained(
+    model_name, num_labels=2)
+
 import random
 import os
 
