@@ -316,7 +316,7 @@ class IE_MPTrainer():
         self.logger = None
 
     def fit(self, model, train_dataset, val_dataset):
-        self.logger.run['model'] = model_name
+        #self.logger.run['model'] = model_name
 
         params_info = {
             'learning_rate': self.learning_rate,
@@ -512,7 +512,7 @@ class IE_MPTrainer():
 
         loss_fig = plot_loss(epochs_train_loss, epochs_val_loss)
 
-        self.logger.run["loss"].upload(neptune.types.File.as_image(loss_fig))
+        #self.logger.run["loss"].upload(neptune.types.File.as_image(loss_fig))
         print("")
         print("Training complete!")
 
