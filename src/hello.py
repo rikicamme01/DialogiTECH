@@ -465,7 +465,7 @@ for i,sample in enumerate(predicted_dataset):
     norm_pred_bounds = normalize_bounds_by_repertoire(nltk_pred[i], sample)
     norm_span_counter += len(norm_pred_bounds)
 
-    seg_pred = find_segmentation_by_bounds(norm_pred_bounds, sample['Testo'])
+    seg_pred = find_segmentation_by_bounds(norm_pred_bounds)
     
     wd_value = windowdiff(dataset[i]['Segmentation'], seg_pred,  6)
     
