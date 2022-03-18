@@ -759,13 +759,13 @@ met_list = []
 
 counter=0
 for i in range(len(test_dataset.df.index)):
-    if len(test_dataset.df['Segmentation'].iloc[i]) > 20:
-        counter += 1
+    
         
-        seg_pred = find_segmentation_by_bounds(bert_preds[i])
-        seg_pred = seg_pred[:len(test_dataset.df['Segmentation'].iloc[i])]
+    seg_pred = find_segmentation_by_bounds(bert_preds[i])
+    seg_pred = seg_pred[:len(test_dataset.df['Segmentation'].iloc[i])]
 
-
+    if len(test_dataset.df['Segmentation'].iloc[i]) > 20 and len(seg_pred) > 20:
+        counter += 1
         wd_value = windowdiff(test_dataset.df['Segmentation'].iloc[i], seg_pred,  20)
 
         ghd_value = ghd(test_dataset.df['Segmentation'].iloc[i], seg_pred)
@@ -791,12 +791,14 @@ norm_met_list = []
 norm_span_counter = 0
 
 for i in range(len(test_dataset.df.index)):
-    if len(test_dataset.df['Segmentation'].iloc[i]) > 20:
-        norm_pred_bounds = normalize_bounds_by_repertoire(bert_preds[i], test_dataset.df.iloc[i])
-        norm_span_counter += len(norm_pred_bounds)
+    
+    norm_pred_bounds = normalize_bounds_by_repertoire(bert_preds[i], test_dataset.df.iloc[i])
+    norm_span_counter += len(norm_pred_bounds)
 
-        seg_pred = find_segmentation_by_bounds(norm_pred_bounds)
-        seg_pred = seg_pred[:len(test_dataset.df['Segmentation'].iloc[i])] #artificioso, sarebbe meglio risolvere ed avere le strighe uguali
+    seg_pred = find_segmentation_by_bounds(norm_pred_bounds)
+    seg_pred = seg_pred[:len(test_dataset.df['Segmentation'].iloc[i])] #artificioso, sarebbe meglio risolvere ed avere le strighe uguali
+        
+    if len(test_dataset.df['Segmentation'].iloc[i]) > 20 and len(seg_pred) > 20:
 
         wd_value = windowdiff(test_dataset.df['Segmentation'].iloc[i], seg_pred,  20)
 
