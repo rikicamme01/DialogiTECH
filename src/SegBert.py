@@ -824,7 +824,7 @@ print('----------------------------------------------------------')
 print('Risultati labels GT e stralci non uniti')
 
 print('Numero testi nel dataset:', str(len(dataset)))
-print('Numero testi cointati nel calcolo metriche (len >= 20)', str(counter))
+print('Numero testi cointati nel calcolo metriche (len > 20)', str(counter))
 
 n_spans = 0
 for e in dataset:

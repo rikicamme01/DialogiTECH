@@ -235,29 +235,31 @@ from nltk.metrics.segmentation import windowdiff, ghd, pk
 
 met_list = []
 
-
+counter = 0
 for i,sample in enumerate(dataset):
     seg_pred = find_segmentation_by_bounds(nltk_pred[i])
+    if len(sample['Segmentation') > 20 and len(seg_pred) > 20:
+        counter += 1
     
-    wd_value = windowdiff(sample['Segmentation'], seg_pred,  6)
-    
-    ghd_value = ghd(sample['Segmentation'], seg_pred)
-    
-    pk_value = pk(sample['Segmentation'], seg_pred, 6)
+        wd_value = windowdiff(sample['Segmentation'], seg_pred,  20)
 
-    text_IoUs = []
-    for bound in nltk_pred[i]:
-        IoUs = compute_IoUs(bound, sample['Bounds'])
-        best = np.argmax(IoUs)
-        text_IoUs.append(IoUs[best])
-    
-    met_dict = {
-        'windowdiff' : wd_value,
-        'ghd' : ghd_value,
-        'pk' : pk_value,
-        'iou' : text_IoUs
-        }
-    met_list.append(met_dict)
+        ghd_value = ghd(sample['Segmentation'], seg_pred)
+
+        pk_value = pk(sample['Segmentation'], seg_pred, 20)
+
+        text_IoUs = []
+        for bound in nltk_pred[i]:
+            IoUs = compute_IoUs(bound, sample['Bounds'])
+            best = np.argmax(IoUs)
+            text_IoUs.append(IoUs[best])
+
+        met_dict = {
+            'windowdiff' : wd_value,
+            'ghd' : ghd_value,
+            'pk' : pk_value,
+            'iou' : text_IoUs
+            }
+        met_list.append(met_dict)
 
 norm_met_list = []
 norm_span_counter = 0
@@ -267,31 +269,33 @@ for i,sample in enumerate(dataset):
     norm_span_counter += len(norm_pred_bounds)
 
     seg_pred = find_segmentation_by_bounds(norm_pred_bounds, sample['Testo'])
+    if len(sample['Segmentation') > 20 and len(seg_pred) > 20:
     
-    wd_value = windowdiff(sample['Segmentation'], seg_pred,  6)
-    
-    ghd_value = ghd(sample['Segmentation'], seg_pred)
-    
-    pk_value = pk(sample['Segmentation'], seg_pred, 6)
+        wd_value = windowdiff(sample['Segmentation'], seg_pred,  6)
 
-    text_IoUs = []
-    for bound in norm_pred_bounds:
-        IoUs = compute_IoUs(bound, sample['Bounds'])
-        best = np.argmax(IoUs)
-        text_IoUs.append(IoUs[best])
-    
-    norm_met_dict = {
-        'windowdiff' : wd_value,
-        'ghd' : ghd_value,
-        'pk' : pk_value,
-        'iou' : text_IoUs
-        }
-    norm_met_list.append(norm_met_dict)
+        ghd_value = ghd(sample['Segmentation'], seg_pred)
+
+        pk_value = pk(sample['Segmentation'], seg_pred, 6)
+
+        text_IoUs = []
+        for bound in norm_pred_bounds:
+            IoUs = compute_IoUs(bound, sample['Bounds'])
+            best = np.argmax(IoUs)
+            text_IoUs.append(IoUs[best])
+
+        norm_met_dict = {
+            'windowdiff' : wd_value,
+            'ghd' : ghd_value,
+            'pk' : pk_value,
+            'iou' : text_IoUs
+            }
+        norm_met_list.append(norm_met_dict)
 
 print('----------------------------------------------------------')
 print('Risultati labels GT e stralci non uniti')
 
 print('Numero testi nel dataset:', str(len(dataset)))
+print('Numero testi cointati nel calcolo metriche (len > 20)', str(counter))
 
 n_spans = 0
 for e in dataset:
@@ -461,36 +465,39 @@ for i, text in enumerate(predicted_dataset):
 norm_met_list = []
 norm_span_counter = 0
 
+counter = 0
 for i,sample in enumerate(predicted_dataset):
     norm_pred_bounds = normalize_bounds_by_repertoire(nltk_pred[i], sample)
     norm_span_counter += len(norm_pred_bounds)
 
     seg_pred = find_segmentation_by_bounds(norm_pred_bounds)
-    
-    wd_value = windowdiff(dataset[i]['Segmentation'], seg_pred,  6)
-    
-    ghd_value = ghd(dataset[i]['Segmentation'], seg_pred)
-    
-    pk_value = pk(dataset[i]['Segmentation'], seg_pred, 6)
+    if len(sample['Segmentation') > 20 and len(seg_pred) > 20:
+        counter += 1
+        wd_value = windowdiff(dataset[i]['Segmentation'], seg_pred,  6)
 
-    text_IoUs = []
-    for bound in norm_pred_bounds:
-        IoUs = compute_IoUs(bound, dataset[i]['Bounds'])
-        best = np.argmax(IoUs)
-        text_IoUs.append(IoUs[best])
-    
-    norm_met_dict = {
-        'windowdiff' : wd_value,
-        'ghd' : ghd_value,
-        'pk' : pk_value,
-        'iou' : text_IoUs
-        }
-    norm_met_list.append(norm_met_dict)
+        ghd_value = ghd(dataset[i]['Segmentation'], seg_pred)
+
+        pk_value = pk(dataset[i]['Segmentation'], seg_pred, 6)
+
+        text_IoUs = []
+        for bound in norm_pred_bounds:
+            IoUs = compute_IoUs(bound, dataset[i]['Bounds'])
+            best = np.argmax(IoUs)
+            text_IoUs.append(IoUs[best])
+
+        norm_met_dict = {
+            'windowdiff' : wd_value,
+            'ghd' : ghd_value,
+            'pk' : pk_value,
+            'iou' : text_IoUs
+            }
+        norm_met_list.append(norm_met_dict)
 
 print('----------------------------------------------------------')
 print('Risultati labels GT e stralci uniti')
 
 print('Numero testi nel dataset:', str(len(dataset)))
+print('Numero testi cointati nel calcolo metriche (len > 20)', str(counter))
 
 n_spans = 0
 for e in dataset:
