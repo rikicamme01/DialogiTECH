@@ -237,7 +237,7 @@ met_list = []
 
 
 for i,sample in enumerate(dataset):
-    seg_pred = find_segmentation_by_bounds(nltk_pred[i], sample['Testo'])
+    seg_pred = find_segmentation_by_bounds(nltk_pred[i])
     
     wd_value = windowdiff(sample['Segmentation'], seg_pred,  6)
     
