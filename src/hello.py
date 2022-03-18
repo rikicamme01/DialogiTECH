@@ -115,8 +115,8 @@ def find_segmentation_by_bounds(bounds: list) -> str:
     
 
 for sample in dataset:
-    sample['Bounds'] = find_word_bounds(sample['Stralci'])
-    sample['Segmentation'] = find_segmentation_by_bounds(sample['Bounds'], sample['Testo'])
+    sample['Bounds'] = find_word_bounds(sample['Stralci'], sample['Testo'])
+    sample['Segmentation'] = find_segmentation_by_bounds(sample['Bounds'])
 
 
 import nltk
