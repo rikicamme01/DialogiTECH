@@ -105,19 +105,17 @@ def find_segmentation(bounds, text):
     
     return ''.join(segmentation)
 
-def find_segmentation_by_bounds(bounds: list, text: str) -> str:
-    segmentation = ['0' for i in range(len(text))]
+def find_segmentation_by_bounds(bounds: list) -> str:
+    segmentation = ['0' for i in range(bounds[-1][1] + 1)]
     for bound in bounds:
-        if bound[1] < len(text):
-            segmentation[bound[1]] = '1'
-        else:
-            segmentation[-1] = '1'
+        segmentation[bound[1]] = '1'
+    #segmentation[-1] = '1'
     return ''.join(segmentation)
     
     
 
 for sample in dataset:
-    sample['Bounds'] = find_word_bounds(sample['Stralci'], sample['Testo'])
+    sample['Bounds'] = find_word_bounds(sample['Stralci'])
     sample['Segmentation'] = find_segmentation_by_bounds(sample['Bounds'], sample['Testo'])
 
 
