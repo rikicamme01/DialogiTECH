@@ -757,67 +757,72 @@ from nltk.metrics.segmentation import windowdiff, ghd, pk
 
 met_list = []
 
-
+counter=0
 for i in range(len(test_dataset.df.index)):
-    seg_pred = find_segmentation_by_bounds(bert_preds[i])
-    seg_pred = seg_pred[:len(test_dataset.df['Segmentation'].iloc[i])]
-    
-    
-    wd_value = windowdiff(test_dataset.df['Segmentation'].iloc[i], seg_pred,  6)
-    
-    ghd_value = ghd(test_dataset.df['Segmentation'].iloc[i], seg_pred)
-    
-    pk_value = pk(test_dataset.df['Segmentation'].iloc[i], seg_pred, 6)
+    if len(test_dataset.df['Segmentation'].iloc[i]) >= 20:
+        counter += 1
+        
+        seg_pred = find_segmentation_by_bounds(bert_preds[i])
+        seg_pred = seg_pred[:len(test_dataset.df['Segmentation'].iloc[i])]
 
-    text_IoUs = []
-    for bound in bert_preds[i]:
-        IoUs = compute_IoUs(bound, test_dataset.df['Bounds'].iloc[i])
-        best = np.argmax(IoUs)
-        text_IoUs.append(IoUs[best])
-    
-    met_dict = {
-        'windowdiff' : wd_value,
-        'ghd' : ghd_value,
-        'pk' : pk_value,
-        'iou' : text_IoUs
-        }
-    met_list.append(met_dict)
+
+        wd_value = windowdiff(test_dataset.df['Segmentation'].iloc[i], seg_pred,  20)
+
+        ghd_value = ghd(test_dataset.df['Segmentation'].iloc[i], seg_pred)
+
+        pk_value = pk(test_dataset.df['Segmentation'].iloc[i], seg_pred, 20)
+
+        text_IoUs = []
+        for bound in bert_preds[i]:
+            IoUs = compute_IoUs(bound, test_dataset.df['Bounds'].iloc[i])
+            best = np.argmax(IoUs)
+            text_IoUs.append(IoUs[best])
+
+        met_dict = {
+            'windowdiff' : wd_value,
+            'ghd' : ghd_value,
+            'pk' : pk_value,
+            'iou' : text_IoUs
+            }
+        met_list.append(met_dict)
 
     
 norm_met_list = []
 norm_span_counter = 0
 
 for i in range(len(test_dataset.df.index)):
-    norm_pred_bounds = normalize_bounds_by_repertoire(bert_preds[i], test_dataset.df.iloc[i])
-    norm_span_counter += len(norm_pred_bounds)
+    if len(test_dataset.df['Segmentation'].iloc[i]) >= 20:
+        norm_pred_bounds = normalize_bounds_by_repertoire(bert_preds[i], test_dataset.df.iloc[i])
+        norm_span_counter += len(norm_pred_bounds)
 
-    seg_pred = find_segmentation_by_bounds(norm_pred_bounds)
-    seg_pred = seg_pred[:len(test_dataset.df['Segmentation'].iloc[i])] #artificioso, sarebbe meglio risolvere ed avere le strighe uguali
-    
-    wd_value = windowdiff(test_dataset.df['Segmentation'].iloc[i], seg_pred,  6)
-    
-    ghd_value = ghd(test_dataset.df['Segmentation'].iloc[i], seg_pred)
-    
-    pk_value = pk(test_dataset.df['Segmentation'].iloc[i], seg_pred, 6)
+        seg_pred = find_segmentation_by_bounds(norm_pred_bounds)
+        seg_pred = seg_pred[:len(test_dataset.df['Segmentation'].iloc[i])] #artificioso, sarebbe meglio risolvere ed avere le strighe uguali
 
-    text_IoUs = []
-    for bound in norm_pred_bounds:
-        IoUs = compute_IoUs(bound, test_dataset.df['Bounds'].iloc[i])
-        best = np.argmax(IoUs)
-        text_IoUs.append(IoUs[best])
-    
-    norm_met_dict = {
-        'windowdiff' : wd_value,
-        'ghd' : ghd_value,
-        'pk' : pk_value,
-        'iou' : text_IoUs
-        }
-    norm_met_list.append(norm_met_dict)
+        wd_value = windowdiff(test_dataset.df['Segmentation'].iloc[i], seg_pred,  20)
+
+        ghd_value = ghd(test_dataset.df['Segmentation'].iloc[i], seg_pred)
+
+        pk_value = pk(test_dataset.df['Segmentation'].iloc[i], seg_pred, 20)
+
+        text_IoUs = []
+        for bound in norm_pred_bounds:
+            IoUs = compute_IoUs(bound, test_dataset.df['Bounds'].iloc[i])
+            best = np.argmax(IoUs)
+            text_IoUs.append(IoUs[best])
+
+        norm_met_dict = {
+            'windowdiff' : wd_value,
+            'ghd' : ghd_value,
+            'pk' : pk_value,
+            'iou' : text_IoUs
+            }
+        norm_met_list.append(norm_met_dict)
 
 print('----------------------------------------------------------')
 print('Risultati labels GT e stralci non uniti')
 
 print('Numero testi nel dataset:', str(len(dataset)))
+print('Numero testi cointati nel calcolo metriche (len >= 20)', str(counter))
 
 n_spans = 0
 for e in dataset:
