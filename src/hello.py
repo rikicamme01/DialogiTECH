@@ -238,7 +238,7 @@ met_list = []
 counter = 0
 for i,sample in enumerate(dataset):
     seg_pred = find_segmentation_by_bounds(nltk_pred[i])
-    if len(sample['Segmentation') > 20 and len(seg_pred) > 20:
+    if len(sample['Segmentation']) > 20 and len(seg_pred) > 20:
         counter += 1
     
         wd_value = windowdiff(sample['Segmentation'], seg_pred,  20)
@@ -269,7 +269,7 @@ for i,sample in enumerate(dataset):
     norm_span_counter += len(norm_pred_bounds)
 
     seg_pred = find_segmentation_by_bounds(norm_pred_bounds, sample['Testo'])
-    if len(sample['Segmentation') > 20 and len(seg_pred) > 20:
+    if len(sample['Segmentation']) > 20 and len(seg_pred) > 20:
     
         wd_value = windowdiff(sample['Segmentation'], seg_pred,  6)
 
@@ -471,7 +471,7 @@ for i,sample in enumerate(predicted_dataset):
     norm_span_counter += len(norm_pred_bounds)
 
     seg_pred = find_segmentation_by_bounds(norm_pred_bounds)
-    if len(sample['Segmentation') > 20 and len(seg_pred) > 20:
+    if len(sample['Segmentation']) > 20 and len(seg_pred) > 20:
         counter += 1
         wd_value = windowdiff(dataset[i]['Segmentation'], seg_pred,  6)
 
