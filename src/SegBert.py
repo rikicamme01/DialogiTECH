@@ -1,7 +1,7 @@
 import sys
 
-if len(sys.argv) != 2:
-    print("ERROR:  treshold not provided")
+if len(sys.argv) != 4:
+    print("ERROR:  batch epoch treshold not provided")
     sys.exit(1)
 
 
@@ -576,8 +576,8 @@ class IE_MPTrainer():
 
 # Hyperparameters
 learning_rate = 1e-5
-batch_size = 18
-n_epochs = 2
+batch_size = int(sys.argv[1])
+n_epochs = int(sys.argv[2])
 trainer = IE_MPTrainer(batch_size, learning_rate, n_epochs)
 
 trainer.fit(model, train_dataset, val_dataset)
@@ -672,7 +672,7 @@ def split_by_prediction2(pred:list, input:dict, text:str, tokenizer) -> list:
 
     return spans
 
-tresh = int(sys.argv[1])
+tresh = float(sys.argv[3])
 preds = [decode_segmentation(e, tresh) for e in probs]
 
 bert_preds = []
