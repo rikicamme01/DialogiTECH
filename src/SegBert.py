@@ -100,11 +100,12 @@ from transformers import AutoTokenizer
 import re
 
 def clean_text(text:str) -> str:
+    #delete \n
+    text = text.replace('\n', ' ')
     #delete double punctuation
     text =  re.sub(r'[\?\.\!]+(?=[\?\.\!])', '', text)
     # add space between a word and punctuation
     text = re.sub('(?<! )(?=[.,!?()])|(?<=[.,!?()])(?! )', r' ', text)
-    return text
 
 dataset = []
 
@@ -602,51 +603,7 @@ def decode_segmentation(probs, threshold):  #one sample
     segmentation[-1] = 1
     return segmentation
 
-def prediction_to_bounds(pred:list) -> list:
-    bounds = []
-    start = 0
-    end = 0
-    for i,e in enumerate(pred):
-        if e == 0:
-            end = i
-            bounds.append((start, end))
-            start = end + 1
-    if not bounds:
-        bounds.append((0, len(pred)))
-    return bounds
-
-# It discards the first -100 of the network output
-def token_gt_bounds(pred:list) -> list:
-    bounds = []
-    start = 0
-    end = 0
-    for i,e in enumerate(pred[1:]):
-        if e == 0:
-            end = i
-            bounds.append((start, end))
-            start = end + 1
-    if not bounds:
-        bounds.append((0, len(pred)))
-    return bounds
-
-def split_by_prediction(pred:list, tok_ids:list, tokenizer) -> list:
-    start = 0
-    end = 0
-    spans = []
-    for i,e in enumerate(pred):
-        if e == 1:
-            end = i
-            span = tokenizer.decode(tok_ids[start:end + 1], skip_special_tokens= True, clean_up_tokenization_spaces= False)
-            spans.append(span)
-            start = end + 1
-            end = end + 1
-    if not spans:
-        spans.append(tokenizer.decode(tok_ids, skip_special_tokens= True, clean_up_tokenization_spaces= False))
-    return spans
-
-def split_by_prediction2(pred:list, input:dict, text:str, tokenizer) -> list:
-
-
+def split_by_prediction(pred:list, input:dict, text:str, tokenizer) -> list:
     offset_mapping = input['offset_mapping'].tolist()
     i=0
     subword_flags = []
@@ -678,13 +635,32 @@ def split_by_prediction2(pred:list, input:dict, text:str, tokenizer) -> list:
 
     return spans
 
-tresh = float(sys.argv[3])
-preds = [decode_segmentation(e, tresh) for e in probs]
+    #another way to proceed: takes text decoding token_ids
+    """
+    start = 0
+    end = 0
+    spans = []
+    for i,e in enumerate(pred):
+        if e == 1:
+            end = i
+            span = tokenizer.decode(input['input_ids'][start:end + 1], skip_special_tokens= True, clean_up_tokenization_spaces= False)
+            spans.append(span)
+            start = end + 1
+            end = end + 1
+    if not spans:
+        spans.append(tokenizer.decode(input['input_ids'], skip_special_tokens= True, clean_up_tokenization_spaces= False))
+    return spans
+    """
+
+
+preds = [decode_segmentation(e, 0.1) for e in probs]
 
 bert_preds = []
+bert_spans = []
 for i,e in enumerate(preds):
-    spans = split_by_prediction2(e, test_dataset[i], test_dataset.df.iloc[i]['Testo'], test_dataset.tokenizer)
+    spans = split_by_prediction(e, test_dataset[i], test_dataset.df.iloc[i]['Testo'], test_dataset.tokenizer)
     bert_preds.append(find_word_bounds(spans, test_dataset.df.iloc[i]['Testo']))
+    bert_spans.append(spans)
     
 
 import numpy as np
@@ -756,21 +732,33 @@ def normalize_bounds_by_repertoire(bounds, sample):
 from nltk.metrics.segmentation import windowdiff, ghd, pk
 
 met_list = []
-
 counter=0
+
 for i in range(len(test_dataset.df.index)):
-    
+    if len(test_dataset.df['Segmentation'].iloc[i]) >= 20:
         
-    seg_pred = find_segmentation_by_bounds(bert_preds[i])
-    seg_pred = seg_pred[:len(test_dataset.df['Segmentation'].iloc[i])]
-
-    if len(test_dataset.df['Segmentation'].iloc[i]) > 20 and len(seg_pred) > 20:
+        
         counter += 1
-        wd_value = windowdiff(test_dataset.df['Segmentation'].iloc[i], seg_pred,  20)
+        
+        seg_pred = find_segmentation_by_bounds(bert_preds[i])
+        seg_pred = seg_pred[:len(test_dataset.df['Segmentation'].iloc[i])]
+        
+        seg_gt_trunk = test_dataset.df['Segmentation'].iloc[i][:len(seg_pred)] # manages predictiones in text with n_tokens  > 512
+        """
+        print(len(test_dataset.df['Segmentation'].iloc[i]))
+        print(len(seg_pred))
+        print(test_dataset.df['Testo'].iloc[i])
+        print('####')
+        print(test_dataset.df['Stralci'].iloc[i])
+        print('####')
+        print(bert_spans[i])
+        print('----------')
+        """
+        wd_value = windowdiff(seg_gt_trunk, seg_pred,  20)
 
-        ghd_value = ghd(test_dataset.df['Segmentation'].iloc[i], seg_pred)
+        ghd_value = ghd(seg_gt_trunk, seg_pred)
 
-        pk_value = pk(test_dataset.df['Segmentation'].iloc[i], seg_pred, 20)
+        pk_value = pk(seg_gt_trunk, seg_pred, 20)
 
         text_IoUs = []
         for bound in bert_preds[i]:
@@ -790,21 +778,21 @@ for i in range(len(test_dataset.df.index)):
 norm_met_list = []
 norm_span_counter = 0
 
+
 for i in range(len(test_dataset.df.index)):
-    
-    norm_pred_bounds = normalize_bounds_by_repertoire(bert_preds[i], test_dataset.df.iloc[i])
-    norm_span_counter += len(norm_pred_bounds)
+    if len(test_dataset.df['Segmentation'].iloc[i]) >= 20:
+        norm_pred_bounds = normalize_bounds_by_repertoire(bert_preds[i], test_dataset.df.iloc[i])
+        norm_span_counter += len(norm_pred_bounds)
 
-    seg_pred = find_segmentation_by_bounds(norm_pred_bounds)
-    seg_pred = seg_pred[:len(test_dataset.df['Segmentation'].iloc[i])] #artificioso, sarebbe meglio risolvere ed avere le strighe uguali
-        
-    if len(test_dataset.df['Segmentation'].iloc[i]) > 20 and len(seg_pred) > 20:
+        seg_pred = find_segmentation_by_bounds(norm_pred_bounds)
+        seg_pred = seg_pred[:len(test_dataset.df['Segmentation'].iloc[i])] #artificioso, sarebbe meglio risolvere ed avere le strighe uguali
+        seg_gt_trunk = test_dataset.df['Segmentation'].iloc[i][:len(seg_pred)] # manages predictiones in text with n_tokens  > 512
 
-        wd_value = windowdiff(test_dataset.df['Segmentation'].iloc[i], seg_pred,  20)
+        wd_value = windowdiff(seg_gt_trunk, seg_pred,  20)
 
-        ghd_value = ghd(test_dataset.df['Segmentation'].iloc[i], seg_pred)
+        ghd_value = ghd(seg_gt_trunk, seg_pred)
 
-        pk_value = pk(test_dataset.df['Segmentation'].iloc[i], seg_pred, 20)
+        pk_value = pk(seg_gt_trunk, seg_pred, 20)
 
         text_IoUs = []
         for bound in norm_pred_bounds:
