@@ -106,6 +106,8 @@ def clean_text(text:str) -> str:
     text =  re.sub(r'[\?\.\!]+(?=[\?\.\!])', '', text)
     # add space between a word and punctuation
     text = re.sub('(?<! )(?=[.,!?()])|(?<=[.,!?()])(?! )', r' ', text)
+    
+    return text
 
 dataset = []
 
