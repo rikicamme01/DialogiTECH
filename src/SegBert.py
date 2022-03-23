@@ -733,141 +733,134 @@ def normalize_bounds_by_repertoire(bounds, sample):
 
 from nltk.metrics.segmentation import windowdiff, ghd, pk
 
-met_list = []
-counter=0
+for window_size in [5, 10, 15, 20]:
 
-for i in range(len(test_dataset.df.index)):
-    if len(test_dataset.df['Segmentation'].iloc[i]) >= 20:
+    met_list = []
+    counter=0
+
+    for i in range(len(test_dataset.df.index)):
+        if len(test_dataset.df['Segmentation'].iloc[i]) >= window_size:
+            
+            
+            counter += 1
+            
+            seg_pred = find_segmentation_by_bounds(bert_preds[i])
+            seg_pred = seg_pred[:len(test_dataset.df['Segmentation'].iloc[i])]
+            
+            seg_gt_trunk = test_dataset.df['Segmentation'].iloc[i][:len(seg_pred)] # manages predictiones in text with n_tokens  > 512
+
+            wd_value = windowdiff(seg_gt_trunk, seg_pred,  window_size)
+
+            ghd_value = ghd(seg_gt_trunk, seg_pred)
+
+            pk_value = pk(seg_gt_trunk, seg_pred, window_size)
+
+            text_IoUs = []
+            for bound in bert_preds[i]:
+                IoUs = compute_IoUs(bound, test_dataset.df['Bounds'].iloc[i])
+                best = np.argmax(IoUs)
+                text_IoUs.append(IoUs[best])
+
+            met_dict = {
+                'windowdiff' : wd_value,
+                'ghd' : ghd_value,
+                'pk' : pk_value,
+                'iou' : text_IoUs
+                }
+            met_list.append(met_dict)
+
         
-        
-        counter += 1
-        
-        seg_pred = find_segmentation_by_bounds(bert_preds[i])
-        seg_pred = seg_pred[:len(test_dataset.df['Segmentation'].iloc[i])]
-        
-        seg_gt_trunk = test_dataset.df['Segmentation'].iloc[i][:len(seg_pred)] # manages predictiones in text with n_tokens  > 512
-        """
-        print(len(test_dataset.df['Segmentation'].iloc[i]))
-        print(len(seg_pred))
-        print(test_dataset.df['Testo'].iloc[i])
-        print('####')
-        print(test_dataset.df['Stralci'].iloc[i])
-        print('####')
-        print(bert_spans[i])
-        print('----------')
-        """
-        wd_value = windowdiff(seg_gt_trunk, seg_pred,  20)
-
-        ghd_value = ghd(seg_gt_trunk, seg_pred)
-
-        pk_value = pk(seg_gt_trunk, seg_pred, 20)
-
-        text_IoUs = []
-        for bound in bert_preds[i]:
-            IoUs = compute_IoUs(bound, test_dataset.df['Bounds'].iloc[i])
-            best = np.argmax(IoUs)
-            text_IoUs.append(IoUs[best])
-
-        met_dict = {
-            'windowdiff' : wd_value,
-            'ghd' : ghd_value,
-            'pk' : pk_value,
-            'iou' : text_IoUs
-            }
-        met_list.append(met_dict)
-
-    
-norm_met_list = []
-norm_span_counter = 0
+    norm_met_list = []
+    norm_span_counter = 0
 
 
-for i in range(len(test_dataset.df.index)):
-    if len(test_dataset.df['Segmentation'].iloc[i]) >= 20:
-        norm_pred_bounds = normalize_bounds_by_repertoire(bert_preds[i], test_dataset.df.iloc[i])
-        norm_span_counter += len(norm_pred_bounds)
+    for i in range(len(test_dataset.df.index)):
+        if len(test_dataset.df['Segmentation'].iloc[i]) >= window_size:
+            norm_pred_bounds = normalize_bounds_by_repertoire(bert_preds[i], test_dataset.df.iloc[i])
+            norm_span_counter += len(norm_pred_bounds)
 
-        seg_pred = find_segmentation_by_bounds(norm_pred_bounds)
-        seg_pred = seg_pred[:len(test_dataset.df['Segmentation'].iloc[i])] #artificioso, sarebbe meglio risolvere ed avere le strighe uguali
-        seg_gt_trunk = test_dataset.df['Segmentation'].iloc[i][:len(seg_pred)] # manages predictiones in text with n_tokens  > 512
+            seg_pred = find_segmentation_by_bounds(norm_pred_bounds)
+            seg_pred = seg_pred[:len(test_dataset.df['Segmentation'].iloc[i])] #artificioso, sarebbe meglio risolvere ed avere le strighe uguali
+            seg_gt_trunk = test_dataset.df['Segmentation'].iloc[i][:len(seg_pred)] # manages predictiones in text with n_tokens  > 512
 
-        wd_value = windowdiff(seg_gt_trunk, seg_pred,  20)
+            wd_value = windowdiff(seg_gt_trunk, seg_pred,  window_size)
 
-        ghd_value = ghd(seg_gt_trunk, seg_pred)
+            ghd_value = ghd(seg_gt_trunk, seg_pred)
 
-        pk_value = pk(seg_gt_trunk, seg_pred, 20)
+            pk_value = pk(seg_gt_trunk, seg_pred, window_size)
 
-        text_IoUs = []
-        for bound in norm_pred_bounds:
-            IoUs = compute_IoUs(bound, test_dataset.df['Bounds'].iloc[i])
-            best = np.argmax(IoUs)
-            text_IoUs.append(IoUs[best])
+            text_IoUs = []
+            for bound in norm_pred_bounds:
+                IoUs = compute_IoUs(bound, test_dataset.df['Bounds'].iloc[i])
+                best = np.argmax(IoUs)
+                text_IoUs.append(IoUs[best])
 
-        norm_met_dict = {
-            'windowdiff' : wd_value,
-            'ghd' : ghd_value,
-            'pk' : pk_value,
-            'iou' : text_IoUs
-            }
-        norm_met_list.append(norm_met_dict)
+            norm_met_dict = {
+                'windowdiff' : wd_value,
+                'ghd' : ghd_value,
+                'pk' : pk_value,
+                'iou' : text_IoUs
+                }
+            norm_met_list.append(norm_met_dict)
 
-print('----------------------------------------------------------')
-print('Risultati labels GT e stralci non uniti')
+    print('----------------------------------------------------------')
+    print('Risultati labels GT e stralci non uniti')
 
-print('Numero testi nel dataset:', str(len(dataset)))
-print('Numero testi cointati nel calcolo metriche (len > 20)', str(counter))
+    print('Numero testi nel dataset:', str(len(test_dataset)))
+    print('Numero testi cointati nel calcolo metriche (len > ', str(window_size), ') ', str(counter))
 
-n_spans = 0
-for e in dataset:
-    n_spans += len(e['Bounds'])
-print('Numero stralci nel dataset:', str(n_spans))
+    n_spans = 0
+    for i in range(test_dataset):
+        n_spans += len(test_dataset.df.iloc[i]['Bounds'])
+    print('Numero stralci nel dataset:', str(n_spans))
 
-n_spans = 0
-for e in bert_preds:
-    n_spans += len(e)
-print('Numero stralci predetti:', str(n_spans))
+    n_spans = 0
+    for e in bert_preds:
+        n_spans += len(e)
+    print('Numero stralci predetti:', str(n_spans))
 
-IoUs = [e['iou'] for e in met_list]
-flat_IoUs = [item for sublist in IoUs for item in sublist]
-mean_IoU = np.mean(flat_IoUs)
-mean_wd = np.mean([e['windowdiff'] for e in met_list])
-mean_pk = np.mean([e['pk'] for e in met_list])
-mean_ghd = np.mean([e['ghd'] for e in met_list])
+    IoUs = [e['iou'] for e in met_list]
+    flat_IoUs = [item for sublist in IoUs for item in sublist]
+    mean_IoU = np.mean(flat_IoUs)
+    mean_wd = np.mean([e['windowdiff'] for e in met_list])
+    mean_pk = np.mean([e['pk'] for e in met_list])
+    mean_ghd = np.mean([e['ghd'] for e in met_list])
 
-perfect_spans = flat_IoUs.count(1)
-print('Percentuale span perfetti: ', str(perfect_spans / len(flat_IoUs)))
+    perfect_spans = flat_IoUs.count(1)
+    print('Percentuale span perfetti: ', str(perfect_spans / len(flat_IoUs)))
 
-print('Media IoU:', str(mean_IoU))
-print('Media Windowdiff:', str(mean_wd))
-print('Media Pk:', str(mean_pk))
-print('Media ghd:', str(mean_ghd))
+    print('Media IoU:', str(mean_IoU))
+    print('Media Windowdiff:', str(mean_wd))
+    print('Media Pk:', str(mean_pk))
+    print('Media ghd:', str(mean_ghd))
 
-print('----------------------------------------------------------')
-print('Risultati labels GT e stralci uniti')
+    print('----------------------------------------------------------')
+    print('Risultati labels GT e stralci uniti')
 
-print('Numero testi nel dataset:', str(len(dataset)))
+    print('Numero testi nel dataset:', str(len(test_dataset)))
 
-n_spans = 0
-for e in dataset:
-    n_spans += len(e['Bounds'])
-print('Numero stralci nel dataset:', str(n_spans))
+    n_spans = 0
+    for i in range(test_dataset):
+        n_spans += len(test_dataset.df.iloc[i]['Bounds'])
+    print('Numero stralci nel dataset:', str(n_spans))
 
-print('Numero stralci predetti:', str(norm_span_counter))
+    print('Numero testi cointati nel calcolo metriche (len > ', str(window_size), ') ', str(norm_span_counter))
 
-IoUs = [e['iou'] for e in norm_met_list]
-flat_IoUs = [item for sublist in IoUs for item in sublist]
-mean_IoU = np.mean(flat_IoUs)
-mean_wd = np.mean([e['windowdiff'] for e in norm_met_list])
-mean_pk = np.mean([e['pk'] for e in norm_met_list])
-mean_ghd = np.mean([e['ghd'] for e in norm_met_list])
+    IoUs = [e['iou'] for e in norm_met_list]
+    flat_IoUs = [item for sublist in IoUs for item in sublist]
+    mean_IoU = np.mean(flat_IoUs)
+    mean_wd = np.mean([e['windowdiff'] for e in norm_met_list])
+    mean_pk = np.mean([e['pk'] for e in norm_met_list])
+    mean_ghd = np.mean([e['ghd'] for e in norm_met_list])
 
-perfect_spans = flat_IoUs.count(1)
+    perfect_spans = flat_IoUs.count(1)
 
-print('Percentuale span perfetti: ', str(perfect_spans / len(flat_IoUs)))
+    print('Percentuale span perfetti: ', str(perfect_spans / len(flat_IoUs)))
 
-print('Media IoU:', str(mean_IoU))
-print('Media Windowdiff:', str(mean_wd))
-print('Media Pk:', str(mean_pk))
-print('Media ghd:', str(mean_ghd))
+    print('Media IoU:', str(mean_IoU))
+    print('Media Windowdiff:', str(mean_wd))
+    print('Media Pk:', str(mean_pk))
+    print('Media ghd:', str(mean_ghd))
 
 
 
