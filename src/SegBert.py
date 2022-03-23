@@ -623,7 +623,7 @@ def split_by_prediction(pred:list, input:dict, text:str, tokenizer) -> list:
                 pred[i] = 0
                 pred[i + 1] =1
         
-            
+    """        
     spans = []
     start = 0
     i=0
@@ -636,9 +636,9 @@ def split_by_prediction(pred:list, input:dict, text:str, tokenizer) -> list:
         i+=1
 
     return spans
-
-    #another way to proceed: takes text decoding token_ids
     """
+    #another way to proceed: takes text decoding token_ids
+    
     start = 0
     end = 0
     spans = []
@@ -652,7 +652,7 @@ def split_by_prediction(pred:list, input:dict, text:str, tokenizer) -> list:
     if not spans:
         spans.append(tokenizer.decode(input['input_ids'], skip_special_tokens= True, clean_up_tokenization_spaces= False))
     return spans
-    """
+    
 
 
 preds = [decode_segmentation(e, 0.1) for e in probs]
