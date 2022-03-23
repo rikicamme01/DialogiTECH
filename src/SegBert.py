@@ -810,7 +810,7 @@ for window_size in [5, 10, 15, 20]:
     print('Numero testi cointati nel calcolo metriche (len > ', str(window_size), ') ', str(counter))
 
     n_spans = 0
-    for i in range(test_dataset):
+    for i in range(len(test_dataset)):
         n_spans += len(test_dataset.df.iloc[i]['Bounds'])
     print('Numero stralci nel dataset:', str(n_spans))
 
@@ -840,7 +840,7 @@ for window_size in [5, 10, 15, 20]:
     print('Numero testi nel dataset:', str(len(test_dataset)))
 
     n_spans = 0
-    for i in range(test_dataset):
+    for i in range(len(test_dataset)):
         n_spans += len(test_dataset.df.iloc[i]['Bounds'])
     print('Numero stralci nel dataset:', str(n_spans))
 
