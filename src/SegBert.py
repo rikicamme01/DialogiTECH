@@ -1,7 +1,7 @@
 import sys
 
-if len(sys.argv) != 4:
-    print("ERROR:  batch epoch treshold not provided")
+if len(sys.argv) != 5:
+    print("ERROR:  batch epoch treshold class_weight not provided")
     sys.exit(1)
 
 
@@ -599,7 +599,7 @@ class IE_MPTrainer():
 learning_rate = 1e-5
 batch_size = int(sys.argv[1])
 n_epochs = int(sys.argv[2])
-class_weights =  [1, 53]
+class_weights =  [1, int(sys.argv[4])]
 #trainer = IE_MPTrainer(batch_size, learning_rate, n_epochs, torch.nn.NLLLoss())
 trainer = IE_MPTrainer(batch_size, learning_rate, n_epochs, torch.nn.NLLLoss(weight = torch.Tensor(class_weights)))
 
