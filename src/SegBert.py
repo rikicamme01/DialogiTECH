@@ -310,16 +310,16 @@ import neptune.new as neptune
 
 
 class IE_MPTrainer():
-    def __init__(self, batch_size, lr, n_epochs) -> None:
+    def __init__(self, batch_size, lr, n_epochs, loss_fn) -> None:
         self.batch_size = batch_size
         self.learning_rate = lr
         self.n_epochs = n_epochs
 
-        #self.logger = NeptuneLogger()
-        self.logger = None
+        self.logger = NeptuneLogger()
+        self.loss_fn = loss_fn
 
     def fit(self, model, train_dataset, val_dataset):
-        #self.logger.run['model'] = model_name
+        self.logger.run['model'] = model_name
 
         params_info = {
             'learning_rate': self.learning_rate,
@@ -414,8 +414,14 @@ class IE_MPTrainer():
                                     attention_mask=b_input_mask,
                                     labels=b_labels)
 
-                    loss = outputs[0]
+                    #loss = outputs[0]
+                    
                     logits = outputs[1]
+                    print(logits.size())
+                    print(b_labels.size())
+
+                    #logSoftmax = torch.nn.LogSoftmax(dim=-1)
+                    loss = self.loss_fn(logits.view(-1, model.num_labels), b_labels.view(-1))
 
                 # Move logits and labels to CPU
                 logits = logits.detach().cpu()
@@ -491,8 +497,11 @@ class IE_MPTrainer():
                     outputs = model(b_input_ids,
                                     attention_mask=b_input_mask,
                                     labels=b_labels)
-                    loss = outputs[0]
+                    #loss = outputs[0]
+                    
                     logits = outputs[1]
+
+                    loss = self.loss_fn(logits.view(-1, model.num_labels), b_labels.view(-1))
 
                 # Accumulate the validation loss.
                 total_val_loss += loss.item()
@@ -515,7 +524,7 @@ class IE_MPTrainer():
 
         loss_fig = plot_loss(epochs_train_loss, epochs_val_loss)
 
-        #self.logger.run["loss"].upload(neptune.types.File.as_image(loss_fig))
+        self.logger.run["loss"].upload(neptune.types.File.as_image(loss_fig))
         print("")
         print("Training complete!")
 
@@ -557,8 +566,10 @@ class IE_MPTrainer():
                 outputs = model(b_input_ids,
                                 attention_mask=b_input_mask,
                                 labels=b_labels)
-                loss = outputs[0]
+                #loss = outputs[0]
+                
                 logits = outputs[1]
+                loss = self.loss_fn(logits.view(-1, model.num_labels), b_labels.view(-1))
 
             # Accumulate the test loss.
             total_test_loss += loss.item()
@@ -587,7 +598,9 @@ class IE_MPTrainer():
 learning_rate = 1e-5
 batch_size = int(sys.argv[1])
 n_epochs = int(sys.argv[2])
-trainer = IE_MPTrainer(batch_size, learning_rate, n_epochs)
+class_weights =  [1, 53]
+#trainer = IE_MPTrainer(batch_size, learning_rate, n_epochs, torch.nn.NLLLoss())
+trainer = IE_MPTrainer(batch_size, learning_rate, n_epochs, torch.nn.NLLLoss(weight = torch.Tensor(class_weights)))
 
 trainer.fit(model, train_dataset, val_dataset)
 
@@ -733,7 +746,7 @@ def normalize_bounds_by_repertoire(bounds, sample):
 
 from nltk.metrics.segmentation import windowdiff, ghd, pk
 
-for window_size in [5, 10, 15, 20]:
+for window_size in [20]:
 
     met_list = []
     counter=0
