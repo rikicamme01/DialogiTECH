@@ -356,6 +356,7 @@ class IE_MPTrainer():
         device = torch.device(
             'cuda') if torch.cuda.is_available() else torch.device('cpu')
         model.to(device)
+        self.loss_fn.to(device)
 
         # For each epoch...
         for epoch_i in range(0, epochs):
@@ -418,9 +419,7 @@ class IE_MPTrainer():
                     
                     logits = outputs[1]
                     #logSoftmax = torch.nn.LogSoftmax(dim=-1)
-                    print(logits.get_device())
-                    print(b_labels.get_device())
-                    print(model.get_device())
+
                     loss = self.loss_fn(logits.view(-1, model.num_labels), b_labels.view(-1))
 
                 # Move logits and labels to CPU
@@ -541,6 +540,8 @@ class IE_MPTrainer():
         # Setup for testing with gpu
         device = torch.device(
             'cuda') if torch.cuda.is_available() else torch.device('cpu')
+        model.to(device)
+        self.loss_fn.to(device)
 
         print("")
         print("Running Test...")
