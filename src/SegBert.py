@@ -417,10 +417,10 @@ class IE_MPTrainer():
                     #loss = outputs[0]
                     
                     logits = outputs[1]
-                    print(logits.size())
-                    print(b_labels.size())
-
                     #logSoftmax = torch.nn.LogSoftmax(dim=-1)
+                    print(logits.get_device())
+                    print(b_labels.get_device())
+                    print(model.get_device())
                     loss = self.loss_fn(logits.view(-1, model.num_labels), b_labels.view(-1))
 
                 # Move logits and labels to CPU
