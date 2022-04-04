@@ -49,7 +49,7 @@ trainer = MPTrainer()
 
 model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=23)
 model.name = model_name
-"""
+
 history = trainer.fit(model,
             train_dataset, 
             val_dataset,
@@ -59,7 +59,7 @@ history = trainer.fit(model,
             torch.nn.NLLLoss(weight = torch.Tensor(config['loss_weights'])))
 
 logger.run['history'] = history
-"""
+
 out = trainer.test(model,test_dataset)
 logger.run['test/metrics'] = out['metrics']
 logger.run['test/loss'] = out['loss']
