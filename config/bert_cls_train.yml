@@ -1,5 +1,3 @@
-# Choose between 'cluster' 'local' 'sagemaker' 
-mode: 'cluster'
 save: False 
 seed: 4321
 batch_size: 24
