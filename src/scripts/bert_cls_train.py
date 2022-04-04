@@ -61,7 +61,7 @@ history = trainer.fit(model,
 
 logger.run['history'] = history
 
-out = trainer.test(model,test_dataset)
+out = trainer.test(model,test_dataset, config['batch_size'], torch.nn.NLLLoss(weight = torch.Tensor(config['loss_weights'])))
 logger.run['test/metrics'] = out['metrics']
 logger.run['test/loss'] = out['loss']
 
