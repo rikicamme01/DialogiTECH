@@ -10,7 +10,7 @@ import neptune.new as neptune
 from transformers import AutoModelForSequenceClassification
 from datasets.hyperion_dataset import HyperionDataset
 from datasets.hyperion_dataset import train_val_split
-from trainers.mp_trainer import MPTrainer
+from trainers.bert_cls_trainer import BertClsTrainer
 from utils.utils import seed_everything
 from loggers.neptune_logger import NeptuneLogger
 from utils.utils import plot_confusion_matrix, plot_f1, plot_loss
@@ -45,7 +45,7 @@ model_name = config['model']
 train_dataset, val_dataset = train_val_split(df, model_name, subsample=False)
 test_dataset = HyperionDataset(test_df, model_name)
 
-trainer = MPTrainer()
+trainer = BertClsTrainer()
 
 
 model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=23)
