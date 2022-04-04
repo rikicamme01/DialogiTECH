@@ -33,8 +33,8 @@ print('config file loaded!')
 
 seed_everything(config['seed'])
 
-df = pd.read_csv(sys.argv[1] + 'data/processed/Splitted_full/Hyperion_train.csv', na_filter=False)
-test_df = pd.read_csv(sys.argv[1] + 'data/processed/Splitted_full/Hyperion_test.csv', na_filter=False)
+df = pd.read_csv(sys.argv[1] + 'data/processed/splitted_full/hyperion_train.csv', na_filter=False)
+test_df = pd.read_csv(sys.argv[1] + 'data/processed/splitted_full/hyperion_test.csv', na_filter=False)
 
 logger = NeptuneLogger()
 logger.run['config'] = config
