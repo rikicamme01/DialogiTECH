@@ -5,24 +5,14 @@ from torch.nn import utils
 import torchmetrics
 import torch
 from torch.utils.data import DataLoader
-from transformers import  AdamW
 from transformers import get_constant_schedule_with_warmup
 
 from utils.utils import format_time, plot_confusion_matrix, plot_f1
 from utils.utils import plot_loss
-from loggers.neptune_logger import NeptuneLogger
-import neptune.new as neptune
 
 
 class MPTrainer():
-    def __init__(self, batch_size, lr, n_epochs, loss_fn) -> None:
-        self.batch_size = batch_size
-        self.learning_rate = lr
-        self.n_epochs = n_epochs
-
-        self.logger = NeptuneLogger()
-        self.loss_fn = loss_fn
-
+    def __init__(self) -> None:
         self.metric_collection = torchmetrics.MetricCollection({
 
             'accuracy_micro' : torchmetrics.Accuracy(num_classes=23, multiclass=True, average='micro'),
@@ -30,10 +20,10 @@ class MPTrainer():
             'accuracy_weighted' : torchmetrics.Accuracy(num_classes=23, multiclass=True, average='weighted'),
             'accuracy_none' : torchmetrics.Accuracy(num_classes=23, multiclass=True, average='none'),
 
-            'f1_micro' : torchmetrics.F1(num_classes=23, multiclass=True, average='micro'),
-            'f1_macro' : torchmetrics.F1(num_classes=23, multiclass=True, average='macro'),
-            'f1_weighted' : torchmetrics.F1(num_classes=23, multiclass=True, average='weighted'),
-            'f1_none' : torchmetrics.F1(num_classes=23, multiclass=True, average='none'),
+            'f1_micro' : torchmetrics.F1Score(num_classes=23, multiclass=True, average='micro'),
+            'f1_macro' : torchmetrics.F1Score(num_classes=23, multiclass=True, average='macro'),
+            'f1_weighted' : torchmetrics.F1Score(num_classes=23, multiclass=True, average='weighted'),
+            'f1_none' : torchmetrics.F1Score(num_classes=23, multiclass=True, average='none'),
 
             'precision_micro' : torchmetrics.Precision(num_classes=23, multiclass=True, average='micro'),
             'precision_macro' : torchmetrics.Precision(num_classes=23, multiclass=True, average='macro'),
@@ -46,15 +36,13 @@ class MPTrainer():
             'recall_none' : torchmetrics.Recall(num_classes=23, multiclass=True, average='none')
         }) 
         
-    def fit(self, model, train_dataset, val_dataset):
-        self.logger.run['model'] = model.name
+    def fit(self, model, train_dataset, val_dataset, batch_size, lr, n_epochs, loss_fn):
         
-        params_info = {
-            'learning_rate' : self.learning_rate,
-            'batch_size' : self.batch_size,
-            'n_epochs' : self.n_epochs
-        }
-        self.logger.run['params'] = params_info
+        output_dict = {}
+        output_dict['train_metrics'] = []
+        output_dict['train_loss'] = []
+        output_dict['val_metrics'] = []
+        output_dict['val_loss'] = []
 
         torch.cuda.empty_cache()
         #----------TRAINING
@@ -62,19 +50,12 @@ class MPTrainer():
         # Measure the total training time for the whole run.
         total_t0 = time.time()
 
-        epochs_train_loss = []
-        epochs_val_loss = []
-        epochs_train_f1 = []
-        epochs_val_f1 = []
-
-        epochs = self.n_epochs
-
         # Creation of Pytorch DataLoaders with shuffle=True for the traing phase
-        train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True)
-        validation_dataloader = DataLoader(val_dataset, batch_size=self.batch_size, shuffle=True)
+        train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+        validation_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
 
         #Adam algorithm optimized for tranfor architectures
-        optimizer = AdamW(model.parameters(), lr=self.learning_rate)
+        optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
         #scheduler = get_constant_schedule_with_warmup(optimizer, num_warmup_steps=300)
 
         # Scaler for mixed precision
@@ -83,10 +64,10 @@ class MPTrainer():
         # Setup for training with gpu
         device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
         model.to(device)
-        self.loss_fn.to(device)
+        loss_fn.to(device)
 
         # For each epoch...
-        for epoch_i in range(0, epochs):
+        for epoch_i in range(0, n_epochs):
             
             # ========================================
             #               Training
@@ -95,7 +76,7 @@ class MPTrainer():
             # Perform one full pass over the training set.
 
             print("")
-            print('======== Epoch {:} / {:} ========'.format(epoch_i + 1, epochs))
+            print('======== Epoch {:} / {:} ========'.format(epoch_i + 1, n_epochs))
             print('Training...')
 
             self.metric_collection.reset()
@@ -136,7 +117,6 @@ class MPTrainer():
                 # backward pass
                 model.zero_grad()  
 
-
                 # Perform a forward pass in mixed precision
                 with torch.cuda.amp.autocast():
                     outputs = model(b_input_ids, 
@@ -146,14 +126,13 @@ class MPTrainer():
                     #loss = outputs[0]
                     logits = outputs[1]
                     logSoftmax = torch.nn.LogSoftmax(dim=1)
-                    loss = self.loss_fn(logSoftmax(logits), b_labels)
+                    loss = loss_fn(logSoftmax(logits), b_labels)
 
                 # Move logits and labels to CPU
                 logits = logits.detach().cpu()
                 label_ids = b_labels.to('cpu')
 
                 batch_metric = self.metric_collection.update(logits, label_ids)
-                #print(batch_metric)
 
                 # Perform a backward pass to compute the gradients in MIXED precision
                 scaler.scale(loss).backward()
@@ -177,10 +156,11 @@ class MPTrainer():
 
             # Compute the average loss over all of the batches.
             avg_train_loss = total_train_loss / len(train_dataloader)
-            epochs_train_loss.append(avg_train_loss)
 
             final_metrics = self.metric_collection.compute()
-            epochs_train_f1.append(final_metrics['f1_weighted'])
+
+            output_dict['train_metrics'].append(final_metrics)
+            output_dict['train_loss'].append(avg_train_loss)
             
             # Measure how long this epoch took.
             training_time = format_time(time.time() - t0)
@@ -233,7 +213,7 @@ class MPTrainer():
                     #loss = outputs[0]
                     logits = outputs[1]
                     logSoftmax = torch.nn.LogSoftmax(dim=1)
-                    loss = self.loss_fn(logSoftmax(logits), b_labels)
+                    loss = loss_fn(logSoftmax(logits), b_labels)
                     
                 # Accumulate the validation loss.
                 total_val_loss += loss.item()
@@ -249,25 +229,27 @@ class MPTrainer():
             # metric on all batches using custom accumulation from torchmetrics library
 
             final_metrics = self.metric_collection.compute()
-            epochs_val_f1.append(final_metrics['f1_weighted'])
 
-            self.logger.run['validation/' + str(epoch_i + 1) + '/metrics'] = final_metrics
+
             print('VALIDATION: ')
             
             # Compute the average loss over all of the batches.
             avg_val_loss = total_val_loss / len(validation_dataloader)
-            epochs_val_loss.append(avg_val_loss)
+
+            output_dict['val_metrics'].append(final_metrics)
+            output_dict['val_loss'].append(avg_val_loss)
             
             # Measure how long the validation run took.
             validation_time = format_time(time.time() - t0)
             
             print("  Validation Loss: {0:.2f}".format(avg_val_loss))
             print("  Validation took: {:}".format(validation_time))
-
+        """
         loss_fig = plot_loss(epochs_train_loss, epochs_val_loss)
         f1_fig = plot_f1(epochs_train_f1, epochs_val_f1)
         self.logger.run["loss"].upload(neptune.types.File.as_image(loss_fig))
         self.logger.run["f1"].upload(neptune.types.File.as_image(f1_fig))
+        """
         print("")
         print("Training complete!")
 
@@ -281,11 +263,14 @@ class MPTrainer():
 
 
     
-    def test(self, model, test_dataset):
+    def test(self, model, test_dataset, batch_size):
+
+        output_dict = {}
+
         # ========================================
         #               Test
         # ========================================
-        test_dataloader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=False)
+        test_dataloader = DataLoader(test_dataset, batch_size, shuffle=False)
 
         # Setup for testing with gpu
         device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
@@ -297,7 +282,7 @@ class MPTrainer():
         self.metric_collection.reset()
         t0 = time.time()
 
-        # Save prediction for confusion matrix
+        # Save prediction for output
         pred = []
 
         model.eval()
@@ -337,19 +322,24 @@ class MPTrainer():
 
         test_metrics = self.metric_collection.compute()
 
-        self.logger.run['test/metrics'] = test_metrics
+
         avg_test_loss = total_test_loss / len(test_dataloader)
-        self.logger.run['test/loss'] = avg_test_loss
+
         test_time = format_time(time.time() - t0)
         print("  Test Loss: {0:.2f}".format(avg_test_loss))
         print("  Test took: {:}".format(test_time))
 
-        #torch.save(model.state_dict(), './')
-
         y_true = test_dataset[:]['labels']
+
+        output_dict['gt'] = y_true
+        output_dict['pred'] = pred
+        output_dict['metrics'] = test_metrics
+        output_dict['loss'] = avg_test_loss
+        """
         cm = plot_confusion_matrix(y_true, pred, test_dataset.labels_list())
         self.logger.run["confusion_matrix"].upload(neptune.types.File.as_image(cm))
+        """
 
-        return pred, y_true
+        return output_dict
                 
     
