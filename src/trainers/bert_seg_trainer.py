@@ -26,12 +26,11 @@ class BertSegTrainer():
 
         # Measure the total training time for the whole run.
         total_t0 = time.time()
-
         # Creation of Pytorch DataLoaders with shuffle=True for the traing phase
         train_dataloader = DataLoader(
-            train_dataset, batch_size=self.batch_size, shuffle=True)
+            train_dataset, batch_size=batch_size, shuffle=True)
         validation_dataloader = DataLoader(
-            val_dataset, batch_size=self.batch_size, shuffle=True)
+            val_dataset, batch_size=batch_size, shuffle=True)
 
         # Adam algorithm optimized for tranfor architectures
         optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
@@ -106,9 +105,12 @@ class BertSegTrainer():
                     #loss = outputs[0]
                     
                     logits = outputs[1]
+                    print(logits.size())
+                    print(logits.view(-1, model.num_labels).size())
 
-                    #logSoftmax = torch.nn.LogSoftmax(dim=-1)
-                    loss = self.loss_fn(logits.view(-1, model.num_labels), b_labels.view(-1))
+                    print(b_labels.size())
+                    print(b_labels.view(-1).size())
+                    loss = loss_fn(logits.view(-1, model.num_labels), b_labels.view(-1))
 
                 # Move logits and labels to CPU
                 logits = logits.detach().cpu()

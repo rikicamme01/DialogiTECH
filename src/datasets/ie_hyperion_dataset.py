@@ -7,41 +7,34 @@ import numpy as np
 import pandas as pd
 
 
-class IE_Hyperion_dataset(torch.utils.data.Dataset):
+class IEHyperionDataset(torch.utils.data.Dataset):
     def __init__(self, df, tokenizer_name):
         self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
         dataset = []
 
         for row in df.itertuples():
-            text = row.Testo
-            
-            if pd.isna(text):
-                sample['Stralci'].append(clean_text(row.Stralcio))
-                sample['Repertori'].append(row.Repertorio)
+            sample = {}
+            sample['Testo'] = clean_text(row.Testo)
+            sample['Stralci'] = [clean_text(s) for s in row.Stralci]
+            sample['Repertori'] = row.Repertori
+            sample['Char_Bounds'] = find_char_bounds(sample['Stralci'], sample['Testo'])
+            sample['Bounds'] = find_word_bounds(sample['Stralci'], sample['Testo'])
+            sample['Char_Segmentation'] = find_segmentation_by_bounds(sample['Char_Bounds'])
+            sample['Segmentation'] = find_segmentation_by_bounds(sample['Bounds'])
 
-            else:
-                sample = {}
-                sample['Testo'] = clean_text(text)
-                sample['Stralci'] = [clean_text(row.Stralcio)]
-                sample['Repertori'] = [row.Repertorio]
-                dataset.append(sample)
-            
-            for sample in dataset:
-                sample['Char_Bounds'] = find_char_bounds(sample['Stralci'], sample['Testo'])
-                sample['Bounds'] = find_word_bounds(sample['Stralci'], sample['Testo'])
-                sample['Char_Segmentation'] = find_segmentation_by_bounds(sample['Char_Bounds'])
-                sample['Segmentation'] = find_segmentation_by_bounds(sample['Bounds'])
+            dataset.append(sample)
+                 
 
-            IE_dict = {
-                'Testo': [sample['Testo'] for sample in dataset],
-                'Char_Segmentation': [sample['Char_Segmentation'] for sample in dataset],
-                'Segmentation': [sample['Segmentation'] for sample in dataset],
-                'Bounds': [sample['Bounds'] for sample in dataset],
-                'Char_Bounds': [sample['Char_Bounds'] for sample in dataset],
-                'Repertori': [sample['Repertori'] for sample in dataset],
-                'Stralci': [sample['Stralci'] for sample in dataset]
-            }
-            self.df = pd.DataFrame(IE_dict)
+        IE_dict = {
+            'Testo': [sample['Testo'] for sample in dataset],
+            'Char_Segmentation': [sample['Char_Segmentation'] for sample in dataset],
+            'Segmentation': [sample['Segmentation'] for sample in dataset],
+            'Bounds': [sample['Bounds'] for sample in dataset],
+            'Char_Bounds': [sample['Char_Bounds'] for sample in dataset],
+            'Repertori': [sample['Repertori'] for sample in dataset],
+            'Stralci': [sample['Stralci'] for sample in dataset]
+        }
+        self.df = pd.DataFrame(IE_dict)
 
 
             
@@ -177,6 +170,13 @@ def clean_text(text:str) -> str:
     #delete double punctuation
     text =  re.sub(r'[\?\.\!]+(?=[\?\.\!])', '', text)
     # add space between a word and punctuation
-    text = re.sub('(?<! )(?=[.,!?()])|(?<=[.,!?()])(?! )', r' ', text)
-    
+    text = re.sub('(?<! )(?=[.,!?()])|(?<=[.,!?()])(?! )', r' ', text)    
     return text
+
+def train_val_split(df, tok_name):
+    train_size = 0.8
+    train_df = df.sample(frac=train_size)
+    val_df = df.drop(train_df.index).reset_index(drop=True)
+    train_df = train_df.reset_index(drop=True)
+
+    return IEHyperionDataset(train_df, tok_name), IEHyperionDataset(val_df, tok_name)
