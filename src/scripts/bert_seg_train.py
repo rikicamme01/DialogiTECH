@@ -5,9 +5,11 @@ sys.path.append(os.path.dirname(sys.path[0]))
 
 import pandas as pd
 import torch
-from transformers import AutoModelForTokenClassification
+from transformers import BertForTokenClassification
+from ast import literal_eval
+import neptune.new as neptune
 
-from utils.utils import seed_everything
+from utils.utils import plot_loss, seed_everything
 from loggers.neptune_logger import NeptuneLogger
 from trainers.bert_seg_trainer import BertSegTrainer
 from datasets.ie_hyperion_dataset import IEHyperionDataset, train_val_split
@@ -30,19 +32,20 @@ print('config file loaded!')
 
 seed_everything(config['seed'])
 
-#logger = NeptuneLogger()
-#logger.run['config'] = config
+logger = NeptuneLogger()
+logger.run['config'] = config
 
-df = pd.read_csv(sys.argv[1] + 'data/processed/splitted_union/ie_hyperion_train.csv')
-test_df = pd.read_csv(sys.argv[1] + 'data/processed/splitted_union/ie_hyperion_test.csv')
+df = pd.read_csv(sys.argv[1] + 'data/processed/splitted_union/ie_hyperion_train.csv', converters={'Stralci': literal_eval})
+test_df = pd.read_csv(sys.argv[1] + 'data/processed/splitted_union/ie_hyperion_test.csv', converters={'Stralci': literal_eval})
 
 model_name = config['model']
 
-model = AutoModelForTokenClassification.from_pretrained(
+model = BertForTokenClassification.from_pretrained(
     model_name, num_labels=2)
+
 model.name = model_name
-train_dataset, val_dataset = train_val_split(df.head(20), model_name)
-test_dataset = IEHyperionDataset(test_df.head(20), model_name)
+train_dataset, val_dataset = train_val_split(df, model_name)
+test_dataset = IEHyperionDataset(test_df, model_name)
 
 trainer = BertSegTrainer()
 
@@ -54,4 +57,16 @@ history = trainer.fit(model,
             config['n_epochs'],
             torch.nn.CrossEntropyLoss(weight = torch.Tensor(config['loss_weights'])))
 
-#logger.run['history'] = history
+logger.run['history'] = history
+fig = plot_loss(history['train_loss'], history['val_loss'])
+logger.run["loss_plot"].upload(neptune.types.File.as_image(fig))
+
+out = trainer.test(model, val_dataset, config['batch_size'], torch.nn.CrossEntropyLoss(weight = torch.Tensor(config['loss_weights'])))
+logger.run['val/norm_metrics'] = out['metrics']
+logger.run['val/metrics'] = out['metrics']
+logger.run['val/loss'] = out['loss']
+
+out = trainer.test(model, test_dataset, config['batch_size'], torch.nn.CrossEntropyLoss(weight = torch.Tensor(config['loss_weights'])))
+logger.run['test/norm_metrics'] = out['metrics']
+logger.run['test/metrics'] = out['metrics']
+logger.run['test/loss'] = out['loss']

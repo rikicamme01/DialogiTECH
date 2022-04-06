@@ -1,7 +1,7 @@
 save: False 
 seed: 4321
-batch_size: 3
-n_epochs: 1
+batch_size: 24
+n_epochs: 3
 learning_rate: 1e-5
 
 model: 'dbmdz/bert-base-italian-xxl-uncased'

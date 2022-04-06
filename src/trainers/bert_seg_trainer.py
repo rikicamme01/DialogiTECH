@@ -7,8 +7,11 @@ import torch
 from torch.utils.data import DataLoader
 from transformers import AdamW
 from transformers import get_constant_schedule_with_warmup
+from nltk.metrics.segmentation import windowdiff, ghd, pk
+import numpy as np
 
 from utils.utils import format_time
+from datasets.ie_hyperion_dataset import find_segmentation_by_bounds, find_word_bounds
 
 
 class BertSegTrainer():
@@ -105,11 +108,7 @@ class BertSegTrainer():
                     #loss = outputs[0]
                     
                     logits = outputs[1]
-                    print(logits.size())
-                    print(logits.view(-1, model.num_labels).size())
 
-                    print(b_labels.size())
-                    print(b_labels.view(-1).size())
                     loss = loss_fn(logits.view(-1, model.num_labels), b_labels.view(-1))
 
                 # Move logits and labels to CPU
@@ -275,13 +274,169 @@ class BertSegTrainer():
                         active_prob.append(sample_prob[j].tolist())
                 preds.append(active_prob)
 
+        labels = [decode_segmentation(e, 0.5) for e in preds]
+        pred_spans = [split_by_prediction(e, test_dataset[i], test_dataset.df.iloc[i]['Testo'], test_dataset.tokenizer) for i,e in enumerate(labels)]
+        pred_word_bounds = [find_word_bounds(e, test_dataset.df.iloc[i]['Testo']) for i,e in enumerate(pred_spans)]
+        norm_pred_word_bounds = [normalize_bounds_by_repertoire(e, test_dataset.df.iloc[i]) for i,e in enumerate(pred_word_bounds)]   
+
         avg_test_loss = total_test_loss / len(test_dataloader)
         test_time = format_time(time.time() - t0)
 
-        output_dict['pred'] = preds
+        #output_dict['pred'] = labels
         output_dict['loss'] = avg_test_loss
+        #output_dict['spans'] = pred_spans
+        output_dict['metrics'] = compute_metrics(pred_word_bounds, test_dataset)
+        output_dict['normalized_metrics'] = compute_metrics(norm_pred_word_bounds, test_dataset)
+
+        
 
         print("  Test Loss: {0:.2f}".format(avg_test_loss))
         print("  Test took: {:}".format(test_time))
 
         return output_dict
+    
+def compute_metrics(preds, dataset):
+    met_list = []
+    for i in range(len(dataset.df.index)):
+        if len(dataset.df['Segmentation'].iloc[i]) >= 20:           
+            seg_pred = find_segmentation_by_bounds(preds[i])
+            seg_pred = seg_pred[:len(dataset.df['Segmentation'].iloc[i])]
+            seg_gt_trunk = dataset.df['Segmentation'].iloc[i][:len(seg_pred)] # manages predictiones in text with n_tokens  > 512
+
+            wd_value = windowdiff(seg_gt_trunk, seg_pred,  20)
+            ghd_value = ghd(seg_gt_trunk, seg_pred)
+            pk_value = pk(seg_gt_trunk, seg_pred, 20)
+
+            text_IoUs = []
+            for bound in preds[i]:
+                IoUs = compute_IoUs(bound, dataset.df['Bounds'].iloc[i])
+                best = np.argmax(IoUs)
+                text_IoUs.append(IoUs[best])
+
+            met_dict = {
+                'windowdiff' : wd_value,
+                'ghd' : ghd_value,
+                'pk' : pk_value,
+                'iou' : text_IoUs
+                }
+            met_list.append(met_dict)
+    IoUs = [e['iou'] for e in met_list]
+    flat_IoUs = [item for sublist in IoUs for item in sublist]
+    out = {
+            'windowdiff' : np.mean([e['windowdiff'] for e in met_list]),
+            'ghd' : np.mean([e['ghd'] for e in met_list]),
+            'pk' : np.mean([e['pk'] for e in met_list]),
+            'iou' : np.mean(flat_IoUs)
+            }
+    return out
+
+    
+
+
+
+def decode_segmentation(probs, threshold):  #one sample
+    if threshold < 0 or threshold > 1:
+        return None
+    segmentation = []
+    for prob in probs:
+        if prob[1] >= threshold:
+            segmentation.append(1)
+        else:
+            segmentation.append(0)
+    segmentation[-1] = 1
+    return segmentation
+
+def split_by_prediction(pred:list, input:dict, text:str, tokenizer) -> list:
+    offset_mapping = input['offset_mapping'].tolist()
+    i=0
+    subword_flags = []
+    while i < len(offset_mapping):
+        if offset_mapping[i][1] != 0:
+            if tokenizer.decode(input['input_ids'][i])[:2] == '##':
+                subword_flags.append(True)
+            else:
+                subword_flags.append(False)
+        i+=1
+        
+    for i in range(len(pred)-1):
+        if pred[i] == 1:
+            if subword_flags[i + 1]:
+                pred[i] = 0
+                pred[i + 1] =1
+        
+    spans = []
+    start = 0
+    i=0
+    while i < len(offset_mapping):
+        if offset_mapping[i][1] != 0:
+            x = pred.pop(0)
+            if x == 1:
+                spans.append(text[start:offset_mapping[i][1]])
+                start = offset_mapping[i][1]
+        i+=1
+    return spans
+
+
+def IoU(A, B):
+    if A == B:
+        return 1
+    start = max(A[0], B[0])
+    end = min(A[1], B[1])
+    if(start > end):
+        return 0
+    intersection = end - start
+    return intersection / (A[1] - A[0] + B[1] - B[0] - intersection)
+
+def compute_IoUs(pred_bounds, gt_spans):
+    """
+    Given a list of predicted spans and a list of ground truth spans, 
+    compute the IoU between each pair of spans
+    
+    :param pred_bounds: a tuple of (start, end) denoting the predicted answer
+    :param gt_spans: a list of tuples of the form (start, end) representing the spans of each ground
+    truth annotation
+    :return: a list of IoUs for each ground truth span.
+    """
+    IoUs = []
+    for gt_bounds in gt_spans:
+        IoUs.append(IoU(pred_bounds, gt_bounds)) 
+    return IoUs
+
+
+def intersection(A, B):
+    if A == B:
+        return 1
+    start = max(A[0], B[0])
+    end = min(A[1], B[1])
+    if(start > end):
+        return 0
+    return end - start
+
+def normalize_bounds_by_repertoire(bounds, sample):
+    bounds_w_rep = []
+    for bound in bounds:
+        intersections = []
+        for gt_bound in sample['Bounds']:
+            intersections.append(intersection(bound, gt_bound))
+        rep_idx = np.argmax(intersections)
+        bounds_w_rep.append({
+            'Bounds': bound,
+            'Repertorio': sample['Repertori'][rep_idx]
+            })
+    normalized = []
+    for i in range(len(bounds_w_rep)):
+        #normalized is not empty
+        if normalized:
+            if normalized[-1]['Repertorio'] == bounds_w_rep[i]['Repertorio']:
+                new_span = (normalized[-1]['Bounds'][0], bounds_w_rep[i]['Bounds'][1])
+                new_span_features = {
+                    'Bounds' : new_span, 
+                    'Repertorio' : bounds_w_rep[i]['Repertorio']
+                    }
+                del normalized[-1]
+                normalized.append(new_span_features)
+            else:
+                normalized.append(bounds_w_rep[i])
+        else:
+            normalized.append(bounds_w_rep[i])
+    return [e['Bounds'] for e in normalized]
