@@ -288,8 +288,6 @@ class BertSegTrainer():
         output_dict['metrics'] = compute_metrics(pred_word_bounds, test_dataset)
         output_dict['normalized_metrics'] = compute_metrics(norm_pred_word_bounds, test_dataset)
 
-        
-
         print("  Test Loss: {0:.2f}".format(avg_test_loss))
         print("  Test took: {:}".format(test_time))
 

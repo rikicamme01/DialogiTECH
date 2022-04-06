@@ -62,11 +62,11 @@ fig = plot_loss(history['train_loss'], history['val_loss'])
 logger.run["loss_plot"].upload(neptune.types.File.as_image(fig))
 
 out = trainer.test(model, val_dataset, config['batch_size'], torch.nn.CrossEntropyLoss(weight = torch.Tensor(config['loss_weights'])))
-logger.run['val/norm_metrics'] = out['metrics']
+logger.run['val/norm_metrics'] = out['normalized_metrics']
 logger.run['val/metrics'] = out['metrics']
 logger.run['val/loss'] = out['loss']
 
 out = trainer.test(model, test_dataset, config['batch_size'], torch.nn.CrossEntropyLoss(weight = torch.Tensor(config['loss_weights'])))
-logger.run['test/norm_metrics'] = out['metrics']
+logger.run['test/norm_metrics'] = out['normalized_metrics']
 logger.run['test/metrics'] = out['metrics']
 logger.run['test/loss'] = out['loss']
