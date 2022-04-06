@@ -65,8 +65,11 @@ out = trainer.test(model, val_dataset, config['batch_size'], torch.nn.CrossEntro
 logger.run['val/norm_metrics'] = out['normalized_metrics']
 logger.run['val/metrics'] = out['metrics']
 logger.run['val/loss'] = out['loss']
+logger.run['val/predicted_spans'] = out['predicted_spans']
+
 
 out = trainer.test(model, test_dataset, config['batch_size'], torch.nn.CrossEntropyLoss(weight = torch.Tensor(config['loss_weights'])))
 logger.run['test/norm_metrics'] = out['normalized_metrics']
 logger.run['test/metrics'] = out['metrics']
 logger.run['test/loss'] = out['loss']
+logger.run['test/predicted_spans'] = out['predicted_spans']
