@@ -288,6 +288,11 @@ class BertSegTrainer():
         output_dict['metrics'] = compute_metrics(pred_word_bounds, test_dataset)
         output_dict['normalized_metrics'] = compute_metrics(norm_pred_word_bounds, test_dataset)
 
+        count = 0
+        for pred in pred_spans:
+            count += len(pred) 
+        output_dict['predicted_spans'] = count
+
         print("  Test Loss: {0:.2f}".format(avg_test_loss))
         print("  Test took: {:}".format(test_time))
 
