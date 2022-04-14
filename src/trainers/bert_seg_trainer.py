@@ -307,7 +307,7 @@ def compute_metrics(preds, dataset):
             seg_gt_trunk = dataset.df['Segmentation'].iloc[i][:len(seg_pred)] # manages predictiones in text with n_tokens  > 512
 
             wd_value = windowdiff(seg_gt_trunk, seg_pred,  20)
-            ghd_value = ghd(seg_gt_trunk, seg_pred)
+            ghd_value = ghd(seg_gt_trunk, seg_pred,20, 20, 1)
             pk_value = pk(seg_gt_trunk, seg_pred, 20)
 
             text_IoUs = []
