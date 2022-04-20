@@ -73,3 +73,7 @@ logger.run['test/norm_metrics'] = out['normalized_metrics']
 logger.run['test/metrics'] = out['metrics']
 logger.run['test/loss'] = out['loss']
 logger.run['test/predicted_spans'] = out['predicted_spans']
+
+hf_token = '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'
+if config['save']:
+    model.push_to_hub("SegBert", use_temp_dir=True, use_auth_token=hf_token)
