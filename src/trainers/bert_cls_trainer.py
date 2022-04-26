@@ -125,8 +125,8 @@ class BertClsTrainer():
                 
                     #loss = outputs[0]
                     logits = outputs[1]
-                    logSoftmax = torch.nn.LogSoftmax(dim=1)
-                    loss = loss_fn(logSoftmax(logits), b_labels)
+
+                    loss = loss_fn(logits.view(-1, model.num_labels), b_labels.view(-1))
 
                 # Move logits and labels to CPU
                 logits = logits.detach().cpu()
@@ -212,8 +212,8 @@ class BertClsTrainer():
                                         labels=b_labels)
                     #loss = outputs[0]
                     logits = outputs[1]
-                    logSoftmax = torch.nn.LogSoftmax(dim=1)
-                    loss = loss_fn(logSoftmax(logits), b_labels)
+                    
+                    loss = loss_fn(logits.view(-1, model.num_labels), b_labels.view(-1))
                     
                 # Accumulate the validation loss.
                 total_val_loss += loss.item()
@@ -301,8 +301,8 @@ class BertClsTrainer():
                                         labels=b_labels)
                 #loss = outputs[0]
                 logits = outputs[1]
-                logSoftmax = torch.nn.LogSoftmax(dim=1)
-                loss = loss_fn(logSoftmax(logits), b_labels)
+                
+                loss = loss_fn(logits.view(-1, model.num_labels), b_labels.view(-1))
                 
             # Accumulate the test loss.
             total_test_loss += loss.item()

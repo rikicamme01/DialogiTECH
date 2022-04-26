@@ -57,11 +57,11 @@ history = trainer.fit(model,
             config['batch_size'],
             float(config['learning_rate']),
             config['n_epochs'],
-            torch.nn.NLLLoss(weight = torch.Tensor(config['loss_weights'])))
+            torch.nn.CrossEntropyLoss(weight = torch.Tensor(config['loss_weights'])))
 
 logger.run['history'] = history
 
-out = trainer.test(model,test_dataset, config['batch_size'], torch.nn.NLLLoss(weight = torch.Tensor(config['loss_weights'])))
+out = trainer.test(model,test_dataset, config['batch_size'], torch.nn.CrossEntropyLoss(weight = torch.Tensor(config['loss_weights'])))
 logger.run['test/metrics'] = out['metrics']
 logger.run['test/loss'] = out['loss']
 
