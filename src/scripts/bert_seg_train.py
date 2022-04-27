@@ -8,6 +8,7 @@ import torch
 from transformers import BertForTokenClassification
 from ast import literal_eval
 import neptune.new as neptune
+from transformers import AutoTokenizer
 
 from utils.utils import plot_loss, seed_everything
 from loggers.neptune_logger import NeptuneLogger
@@ -77,3 +78,4 @@ logger.run['test/predicted_spans'] = out['predicted_spans']
 hf_token = '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'
 if config['save']:
     model.push_to_hub("SegBert", use_temp_dir=True, use_auth_token=hf_token)
+    train_dataset.tokenizer.push_to_hub("SegBert", use_temp_dir=True, use_auth_token=hf_token)

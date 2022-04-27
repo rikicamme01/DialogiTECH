@@ -8,6 +8,7 @@ import torch
 import neptune.new as neptune
 
 from transformers import AutoModelForSequenceClassification
+from transformers import AutoTokenizer
 from datasets.hyperion_dataset import HyperionDataset
 from datasets.hyperion_dataset import train_val_split
 from trainers.bert_cls_trainer import BertClsTrainer
@@ -71,3 +72,4 @@ logger.run["confusion_matrix"].upload(neptune.types.File.as_image(cm))
 hf_token = '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'
 if config['save']:
     model.push_to_hub("RepML", use_temp_dir=True, use_auth_token=hf_token)
+    AutoTokenizer.from_pretrained(model_name).push_to_hub("RepML", use_temp_dir=True, use_auth_token=hf_token)
