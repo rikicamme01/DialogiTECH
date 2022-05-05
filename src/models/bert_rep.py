@@ -1,6 +1,8 @@
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 import torch 
 
+from src.datasets.hyperion_dataset import decode_labels
+
 class BertRep():
     def __init__(self):
         self.model = AutoModelForSequenceClassification.from_pretrained('MiBo/RepML')
@@ -10,14 +12,20 @@ class BertRep():
         self.model.eval()
     
     def predict(self, text:list[str]):
-        text_tensor = self.tokenizer.encode(text,
-                                    return_special_tokens_mask=True,
-                                    return_offsets_mapping=True,
+        encoded_text = self.tokenizer(text,
+                                    max_length=512,
                                     add_special_tokens=True,
                                     return_attention_mask=True,
-                                    padding='max_length',
+                                    padding=True,
                                     truncation=True,
-                                    ).to(self.device)
+                                    return_tensors="pt"
+                                    )
+        encoded_text['input_ids'].to(self.device)
+        encoded_text['attention_mask'].to(self.device)
 
-        output = self.model(text_tensor)
-        return output 
+                                    
+        logits = self.model(encoded_text['input_ids'],encoded_text['attention_mask'])['logits']
+        probs = logits.softmax(dim=1)
+        preds = probs.argmax(dim=1)
+        return decode_labels(preds)
+
