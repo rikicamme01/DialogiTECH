@@ -58,10 +58,10 @@ df['Precision'] =  df.apply(lambda x: precision(x['Bounds_predetti'], x['Bounds'
 df['Recall'] =  df.apply(lambda x: recall(x['Bounds_predetti'], x['Bounds'], x['Repertori_predetti'], x['Repertori']), axis=1)
 df['F1'] =  df.apply(lambda x: f1(x['Precision'], x['Recall']), axis=1)
 
-
-logger.run['Precision'] = df['Precision'].mean()
-logger.run['Recall'] = df['recall'].mean()
-logger.run['F1'] = df['F1'].mean()
+logger.run['pipeline'] = 'NLTK + BERT (No normalization)'
+logger.run['precision'] = df['Precision'].mean()
+logger.run['recall'] = df['recall'].mean()
+logger.run['f1'] = df['F1'].mean()
 
 
 
