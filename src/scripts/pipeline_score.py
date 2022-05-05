@@ -8,9 +8,13 @@ from src.datasets.ie_hyperion_dataset import find_word_bounds
 from src.models.nltk_segmenter import NLTKSegmenter
 from src.models.bert_rep import BertRep
 
+if len(sys.argv) != 2:
+    print("ERROR:  config_file path not provided")
+    sys.exit(1)
+
 logger = NeptuneLogger()
 
-df = pd.read_csv('../data/processed/pipeline/test/ie_hyperion.csv', converters={'Stralci': literal_eval, 'Repertori': literal_eval})
+df = pd.read_csv(sys.argv[1] + 'data/processed/pipeline/test/ie_hyperion.csv', converters={'Stralci': literal_eval, 'Repertori': literal_eval})
 df['Bounds'] = df.apply(lambda x: find_word_bounds(x['Stralci'], x['Testo']), axis=1).values.tolist()
 
 nltk_seg = NLTKSegmenter()
