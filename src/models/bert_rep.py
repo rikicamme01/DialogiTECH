@@ -1,7 +1,7 @@
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 import torch 
 
-from src.datasets.hyperion_dataset import decode_labels
+from datasets.hyperion_dataset import decode_labels
 
 class BertRep():
     def __init__(self):
