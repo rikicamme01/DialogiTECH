@@ -4,9 +4,9 @@ import os
 sys.path.append(os.path.dirname(sys.path[0]))
 from ast import literal_eval
 from loggers.neptune_logger import NeptuneLogger
-from src.datasets.ie_hyperion_dataset import find_word_bounds
-from src.models.nltk_segmenter import NLTKSegmenter
-from src.models.bert_rep import BertRep
+from datasets.ie_hyperion_dataset import find_word_bounds
+from models.nltk_segmenter import NLTKSegmenter
+from models.bert_rep import BertRep
 
 if len(sys.argv) != 2:
     print("ERROR:  config_file path not provided")
