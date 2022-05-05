@@ -25,6 +25,7 @@ class BertRep():
 
                                     
         logits = self.model(encoded_text['input_ids'],encoded_text['attention_mask'])['logits']
+        logits = logits.detach().cpu()
         probs = logits.softmax(dim=1)
         preds = probs.argmax(dim=1)
         return decode_labels(preds)
