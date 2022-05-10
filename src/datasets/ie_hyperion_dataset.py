@@ -10,38 +10,17 @@ import pandas as pd
 class IEHyperionDataset(torch.utils.data.Dataset):
     def __init__(self, df, tokenizer_name):
         self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
-        dataset = []
 
-        for row in df.itertuples():
-            sample = {}
-            sample['Testo'] = clean_text(row.Testo)
-            sample['Stralci'] = [clean_text(s) for s in row.Stralci]
-            sample['Repertori'] = row.Repertori
-            sample['Char_Bounds'] = find_char_bounds(sample['Stralci'], sample['Testo'])
-            sample['Bounds'] = find_word_bounds(sample['Stralci'], sample['Testo'])
-            sample['Char_Segmentation'] = find_segmentation_by_bounds(sample['Char_Bounds'])
-            sample['Segmentation'] = find_segmentation_by_bounds(sample['Bounds'])
-
-            dataset.append(sample)
-                 
-
-        IE_dict = {
-            'Testo': [sample['Testo'] for sample in dataset],
-            'Char_Segmentation': [sample['Char_Segmentation'] for sample in dataset],
-            'Segmentation': [sample['Segmentation'] for sample in dataset],
-            'Bounds': [sample['Bounds'] for sample in dataset],
-            'Char_Bounds': [sample['Char_Bounds'] for sample in dataset],
-            'Repertori': [sample['Repertori'] for sample in dataset],
-            'Stralci': [sample['Stralci'] for sample in dataset]
-        }
-        self.df = pd.DataFrame(IE_dict)
-
-
-            
-
-    def __getitem__(self, idx):
-        text = self.df['Testo'].iloc[idx]
-        encoding = self.tokenizer(text,
+        self.df = pd.DataFrame()
+        self.df['Testo'] = df['Testo'].map(clean_text)
+        self.df['Stralci'] = df['Stralci'].map(lambda x: [clean_text(s) for s in x])
+        self.df['Repertori'] = df['Repertori']
+        self.df['Char_bounds'] = df.apply(lambda x: find_char_bounds(x['Stralci'], x['Testo']), axis=1).values.tolist()
+        self.df['Bounds'] = df.apply(lambda x: find_word_bounds(x['Stralci'], x['Testo']), axis=1).values.tolist()
+        self.df['Char_segmentation'] = self.df['Char_bounds'].map(find_segmentation_by_bounds)
+        self.df['Segmentation'] = self.df['Bounds'].map(find_segmentation_by_bounds)
+        
+        self.encodings = encoding = self.tokenizer(self.df['Testo'].tolist(),
                                   # is_pretokenized=True,
                                   return_special_tokens_mask=True,
                                   return_offsets_mapping=True,
@@ -49,31 +28,32 @@ class IEHyperionDataset(torch.utils.data.Dataset):
                                   return_attention_mask=True,
                                   padding='max_length',
                                   truncation=True,
+                                  return_tensors="pt"
                                   )
-        char_labels = list(self.df['Char_Segmentation'].iloc[idx])
-        ends = [i for i in range(len(char_labels)) if char_labels[i] == '1']
-
-        last_token_idx = max(index for index, item in enumerate(encoding['special_tokens_mask']) if item == 0)
-
-        encoded_labels = np.ones(len(encoding['input_ids']), dtype=int) * -100
-        x = ends.pop(0)
-        for i,e in enumerate(encoding['offset_mapping']):
-            if e[1] != 0:
-                # overwrite label
-                if x >= e[0] and x <= e[1]:# Doubt if insert < e[1] because of offset mapping composition
-                    encoded_labels[i] = 1
-                    if ends: 
-                        x = ends.pop(0)
+        self.labels = []
+        for i in range(len(df.index)):
+            char_labels = list(self.df['Char_segmentation'].iloc[i])
+            ends = [idx for idx in range(len(char_labels)) if char_labels[idx] == '1']
+            last_token_idx = max(index for index, item in enumerate(self.encodings['special_tokens_mask'][i]) if item == 0)
+            encoded_labels = np.ones(len(self.encodings['input_ids'][i]), dtype=int) * -100
+            x = ends.pop(0)
+            for j,e in enumerate(self.encodings['offset_mapping'][i]):
+                if e[1] != 0:
+                    # overwrite label
+                    if x >= e[0] and x < e[1]:# Doubt if insert < e[1] because of offset mapping composition
+                        encoded_labels[j] = 1
+                        if ends: 
+                            x = ends.pop(0)
+                        else:
+                            x = -1
                     else:
-                        x = -1
-                else:
-                    encoded_labels[i] = 0
+                        encoded_labels[j] = 0
+                encoded_labels[last_token_idx] = 1
+                self.labels.append(encoded_labels)
 
-        encoded_labels[last_token_idx] = 1
-
-
-        item = {key: torch.as_tensor(val) for key, val in encoding.items()}
-        item['labels'] = torch.as_tensor(encoded_labels)
+    def __getitem__(self, idx):
+        item = {key: val[idx] for key, val in self.encodings.items()}
+        item['labels'] = self.labels[idx]
         return item
 
     def __len__(self):
@@ -170,7 +150,7 @@ def clean_text(text:str) -> str:
     #delete double punctuation
     text =  re.sub(r'[\?\.\!]+(?=[\?\.\!])', '', text)
     # add space between a word and punctuation
-    text = re.sub('(?<! )(?=[.,!?()])|(?<=[.,!?()])(?! )', r' ', text)    
+    #text = re.sub('(?<! )(?=[.,!?()])|(?<=[.,!?()])(?! )', r' ', text)    
     return text
 
 def train_val_split(df, tok_name):

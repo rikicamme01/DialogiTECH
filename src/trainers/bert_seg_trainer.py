@@ -370,9 +370,9 @@ def split_by_prediction(pred:list, input:dict, text:str, tokenizer) -> list:
     spans = []
     start = 0
     i=0
-    while i < len(offset_mapping):
+    while i < len(pred):
         if offset_mapping[i][1] != 0:
-            x = pred.pop(0)
+            x = pred[i]
             if x == 1:
                 spans.append(text[start:offset_mapping[i][1]])
                 start = offset_mapping[i][1]
