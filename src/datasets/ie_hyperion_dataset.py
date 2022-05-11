@@ -5,6 +5,7 @@ import torch
 from transformers import AutoTokenizer
 import numpy as np
 import pandas as pd
+from collections import deque
 
 
 class IEHyperionDataset(torch.utils.data.Dataset):
@@ -33,17 +34,17 @@ class IEHyperionDataset(torch.utils.data.Dataset):
         self.labels = []
         for i in range(len(df.index)):
             char_labels = list(self.df['Char_segmentation'].iloc[i])
-            ends = [idx for idx in range(len(char_labels)) if char_labels[idx] == '1']
+            ends = deque([idx for idx in range(len(char_labels)) if char_labels[idx] == '1'])
             last_token_idx = max(index for index, item in enumerate(self.encodings['special_tokens_mask'][i]) if item == 0)
             encoded_labels = np.ones(len(self.encodings['input_ids'][i]), dtype=int) * -100
-            x = ends.pop(0)
+            x = ends.popleft()
             for j,e in enumerate(self.encodings['offset_mapping'][i]):
                 if e[1] != 0:
                     # overwrite label
-                    if x >= e[0] and x < e[1]:# Doubt if insert < e[1] because of offset mapping composition
+                    if x >= e[0] and x <= e[1]:# Doubt if insert < e[1] because of offset mapping composition
                         encoded_labels[j] = 1
                         if ends: 
-                            x = ends.pop(0)
+                            x = ends.popleft()
                         else:
                             x = -1
                     else:
