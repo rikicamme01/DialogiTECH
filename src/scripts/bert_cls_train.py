@@ -43,7 +43,7 @@ logger.run['config'] = config
 
 model_name = config['model']
 
-train_dataset, val_dataset = train_val_split(df, model_name, subsample=False)
+train_dataset, val_dataset = train_val_split(df.head(10), model_name, subsample=False)
 test_dataset = HyperionDataset(test_df, model_name)
 
 trainer = BertClsTrainer()
