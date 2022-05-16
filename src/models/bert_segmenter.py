@@ -43,37 +43,7 @@ def decode_segmentation(probs, threshold):  #one sample
             segmentation.append(0)
     segmentation[-1] = 1
     return segmentation
-"""
-def split_by_prediction(pred:list, input:dict, text:str, tokenizer) -> list:
-    offset_mapping = input['offset_mapping'][0].tolist()
-    i=0
-    subword_flags = []
-    while i < len(offset_mapping):
-        if offset_mapping[i][1] != 0:
-            if tokenizer.decode(input['input_ids'][0][i])[:2] == '##':
-                subword_flags.append(True)
-            else:
-                subword_flags.append(False)
-        i+=1
-        
-    for i in range(len(pred)-1):
-        if pred[i] == 1:
-            if subword_flags[i + 1]:
-                pred[i] = 0
-                pred[i + 1] =1
-        
-    spans = []
-    start = 0
-    i=0
-    while i < len(offset_mapping):
-        if offset_mapping[i][1] != 0:
-            x = pred.pop(0)
-            if x == 1:
-                spans.append(text[start:offset_mapping[i][1]])
-                start = offset_mapping[i][1]
-        i+=1
-    return spans
-"""
+
 def split_by_prediction(pred:list, input_ids:list, offset_mapping:list, text:str, tokenizer) -> list:
     subword_flags = [False for i in range(len(input_ids))]
     tokens = [tokenizer.decode(id) for id in input_ids]
@@ -95,6 +65,8 @@ def split_by_prediction(pred:list, input_ids:list, offset_mapping:list, text:str
             if x == 1:
                 spans.append(text[start:offset_mapping[i][1]])
                 start = offset_mapping[i][1]
+    if not spans:
+        spans.append(text)
     return spans
 
     

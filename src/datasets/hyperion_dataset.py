@@ -107,7 +107,7 @@ def decode_labels(encoded_labels):
     le.fit(LABELS)
     return le.inverse_transform(encoded_labels)
 
-def twitter_preprocess(df):
+def twitter_preprocess(text:str) -> str:
     text_processor = TextPreProcessor(
     # terms that will be normalized
     normalize=['url', 'email', 'percent', 'money', 'phone', 'user',
@@ -127,20 +127,14 @@ def twitter_preprocess(df):
     dicts=[emoticons]
     )
 
-    processed = []
+    text = str(" ".join(text_processor.pre_process_doc(text)))
+    text = re.sub(r"[^a-zA-ZÀ-ú</>!?♥♡\s\U00010000-\U0010ffff]", ' ', text)
+    text = re.sub(r"\s+", ' ', text)
+    text = re.sub(r'(\w)\1{2,}',r'\1\1', text)
+    text = re.sub ( r'^\s' , '' , text )
+    text = re.sub ( r'\s$' , '' , text )
 
-    for s in df['Stralcio']:
-        s = str(" ".join(text_processor.pre_process_doc(s)))
-        s = re.sub(r"[^a-zA-ZÀ-ú</>!?♥♡\s\U00010000-\U0010ffff]", ' ', s)
-        s = re.sub(r"\s+", ' ', s)
-        s = re.sub(r'(\w)\1{2,}',r'\1\1', s)
-        s = re.sub ( r'^\s' , '' , s )
-        s = re.sub ( r'\s$' , '' , s )
-        processed.append(s)
-
-    df['Stralcio'] = processed
-
-    return df
+    return text
     
 
 def train_val_split(df, tok_name,  val_perc=0.2, subsample = False):

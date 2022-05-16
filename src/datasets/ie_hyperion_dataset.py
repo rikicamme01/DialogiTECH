@@ -41,7 +41,7 @@ class IEHyperionDataset(torch.utils.data.Dataset):
             for j,e in enumerate(self.encodings['offset_mapping'][i]):
                 if e[1] != 0:
                     # overwrite label
-                    if x >= e[0] and x <= e[1]:# Doubt if insert < e[1] because of offset mapping composition
+                    if x >= e[0] and x < e[1]:# Doubt if insert < e[1] because of offset mapping composition
                         encoded_labels[j] = 1
                         if ends: 
                             x = ends.popleft()
