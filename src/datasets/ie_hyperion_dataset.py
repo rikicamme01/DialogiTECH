@@ -16,8 +16,8 @@ class IEHyperionDataset(torch.utils.data.Dataset):
         self.df['Testo'] = df['Testo'].map(clean_text)
         self.df['Stralci'] = df['Stralci'].map(lambda x: [clean_text(s) for s in x])
         self.df['Repertori'] = df['Repertori']
-        self.df['Char_bounds'] = df.apply(lambda x: find_char_bounds(x['Stralci'], x['Testo']), axis=1).values.tolist()
-        self.df['Bounds'] = df.apply(lambda x: find_word_bounds(x['Stralci'], x['Testo']), axis=1).values.tolist()
+        self.df['Char_bounds'] = self.df.apply(lambda x: find_char_bounds(x['Stralci'], x['Testo']), axis=1).values.tolist()
+        self.df['Bounds'] = self.df.apply(lambda x: find_word_bounds(x['Stralci'], x['Testo']), axis=1).values.tolist()
         self.df['Char_segmentation'] = self.df['Char_bounds'].map(find_segmentation_by_bounds)
         self.df['Segmentation'] = self.df['Bounds'].map(find_segmentation_by_bounds)
         
@@ -33,12 +33,15 @@ class IEHyperionDataset(torch.utils.data.Dataset):
                                   )
         self.labels = []
         for i in range(len(df.index)):
+            row = self.df.iloc[i]
+            testo = self.df['Testo'].iloc[i]
             char_labels = list(self.df['Char_segmentation'].iloc[i])
             ends = deque([idx for idx in range(len(char_labels)) if char_labels[idx] == '1'])
             last_token_idx = max(index for index, item in enumerate(self.encodings['special_tokens_mask'][i]) if item == 0)
             encoded_labels = np.ones(len(self.encodings['input_ids'][i]), dtype=int) * -100
             x = ends.popleft()
             for j,e in enumerate(self.encodings['offset_mapping'][i]):
+                tok = self.tokenizer.decode(self.encodings['input_ids'][i][j])
                 if e[1] != 0:
                     # overwrite label
                     if x >= e[0] and x < e[1]:# Doubt if insert < e[1] because of offset mapping composition
@@ -49,7 +52,7 @@ class IEHyperionDataset(torch.utils.data.Dataset):
                             x = -1
                     else:
                         encoded_labels[j] = 0
-                encoded_labels[last_token_idx] = 1
+            encoded_labels[last_token_idx] = 1
             self.labels.append(encoded_labels)
 
     def __getitem__(self, idx):
@@ -80,7 +83,7 @@ def find_char_bounds(spans: list, text: str) -> list:
         start = text.find(span)
         if start == -1:
             start = last_char + 1
-        last_char = start + len(span)
+        last_char = start + len(span) - 1
         bounds.append((start, last_char))
         
     return bounds
@@ -148,6 +151,8 @@ def find_segmentation_by_bounds(bounds: list) -> str:
 def clean_text(text:str) -> str:
     #delete \n
     text = text.replace('\n', ' ')
+    #text = text.rstrip('\n')
+    text = text.rstrip()
     #delete double punctuation
     text =  re.sub(r'[\?\.\!]+(?=[\?\.\!])', '', text)
     # add space between a word and punctuation
