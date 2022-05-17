@@ -1,9 +1,9 @@
 
 from collections import deque
-from transformers import AutoModelForTokenClassification, AutoTokenizer
-import torch
 
-from collections import deque
+import torch
+from transformers import AutoModelForTokenClassification, AutoTokenizer
+
 
 class BertSegmenter():
     def __init__(self):

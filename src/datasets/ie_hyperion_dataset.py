@@ -21,7 +21,7 @@ class IEHyperionDataset(torch.utils.data.Dataset):
         self.df['Char_segmentation'] = self.df['Char_bounds'].map(find_segmentation_by_bounds)
         self.df['Segmentation'] = self.df['Bounds'].map(find_segmentation_by_bounds)
         
-        self.encodings = encoding = self.tokenizer(self.df['Testo'].tolist(),
+        self.encodings = self.tokenizer(self.df['Testo'].tolist(),
                                   # is_pretokenized=True,
                                   return_special_tokens_mask=True,
                                   return_offsets_mapping=True,
@@ -50,7 +50,7 @@ class IEHyperionDataset(torch.utils.data.Dataset):
                     else:
                         encoded_labels[j] = 0
                 encoded_labels[last_token_idx] = 1
-                self.labels.append(encoded_labels)
+            self.labels.append(encoded_labels)
 
     def __getitem__(self, idx):
         item = {key: val[idx] for key, val in self.encodings.items()}
