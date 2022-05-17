@@ -42,6 +42,7 @@ def extract_active_preds(preds:list, special_tokens:list) -> deque:
     for i, e in enumerate(special_tokens):
         if(e == 0):
             active.append(preds[i])
+    active[-1] = 1
     return active
          
 

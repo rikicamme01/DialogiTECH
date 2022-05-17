@@ -248,7 +248,6 @@ class BertSegTrainer():
             b_input_ids = batch['input_ids'].to(device)
             b_input_mask = batch['attention_mask'].to(device)
             b_labels = batch['labels'].to(device)
-            b_special_tokens_mask = batch['special_tokens_mask'].to(device)
             with torch.no_grad():
 
                 # Forward pass, calculate logits
