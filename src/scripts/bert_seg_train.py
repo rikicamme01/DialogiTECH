@@ -50,7 +50,7 @@ train_dataset, val_dataset = train_val_split(df, model_name)
 test_dataset = IEHyperionDataset(test_df, model_name)
 
 trainer = BertSegTrainer()
-
+"""
 history = trainer.fit(model,
             train_dataset, 
             val_dataset,
@@ -62,7 +62,7 @@ history = trainer.fit(model,
 logger.run['history'] = history
 fig = plot_loss(history['train_loss'], history['val_loss'])
 logger.run["loss_plot"].upload(neptune.types.File.as_image(fig))
-
+"""
 out = trainer.test(model, val_dataset, config['batch_size'], torch.nn.CrossEntropyLoss(weight = torch.Tensor(config['loss_weights'])))
 logger.run['val/norm_metrics'] = out['normalized_metrics']
 logger.run['val/metrics'] = out['metrics']
