@@ -1,6 +1,9 @@
 
+from collections import deque
 from transformers import AutoModelForTokenClassification, AutoTokenizer
 import torch
+
+from collections import deque
 
 class BertSegmenter():
     def __init__(self):
@@ -28,9 +31,19 @@ class BertSegmenter():
         full_probs = logits.softmax(dim=-1)
         full_probs = full_probs.view(full_probs.size(1), full_probs.size(2))
 
-        labels = decode_segmentation(full_probs, 0.5)
-        x = split_by_prediction(labels, encoded_text['input_ids'][0].tolist(), encoded_text['offset_mapping'][0].tolist(), text, self.tokenizer)
+        full_labels = decode_segmentation(full_probs, 0.5)
+        active_labels = extract_active_preds(full_labels, encoded_text['special_tokens_mask'][0].tolist())
+
+        x = split_by_prediction(active_labels, encoded_text['input_ids'][0].tolist(), encoded_text['offset_mapping'][0].tolist(), text, self.tokenizer)
         return x
+
+def extract_active_preds(preds:list, special_tokens:list) -> deque:
+    active = []
+    for i, e in enumerate(special_tokens):
+        if(e == 0):
+            active.append(preds[i])
+    return active
+         
 
 def decode_segmentation(probs, threshold):  #one sample
     if threshold < 0 or threshold > 1:
@@ -46,7 +59,6 @@ def decode_segmentation(probs, threshold):  #one sample
 
 def split_by_prediction(pred:list, input_ids:list, offset_mapping:list, text:str, tokenizer) -> list:
     subword_flags = [False for i in range(len(input_ids))]
-    tokens = [tokenizer.decode(id) for id in input_ids]
     for i in  range(len(input_ids)):
         if offset_mapping[i][1] != 0:
             if tokenizer.decode(input_ids[i])[:2] == '##':
@@ -59,9 +71,11 @@ def split_by_prediction(pred:list, input_ids:list, offset_mapping:list, text:str
 
     spans = []
     start = 0
+    j=0
     for i in range(len(offset_mapping)):
         if offset_mapping[i][1] != 0:
-            x = pred[i]
+            x = pred[0]
+            j += 1
             if x == 1:
                 spans.append(text[start:offset_mapping[i][1]])
                 start = offset_mapping[i][1]

@@ -12,7 +12,7 @@ import numpy as np
 
 from utils.utils import format_time
 from datasets.ie_hyperion_dataset import find_segmentation_by_bounds, find_word_bounds
-from models.bert_segmenter import decode_segmentation, split_by_prediction
+from models.bert_segmenter import decode_segmentation, split_by_prediction, extract_active_preds
 
 
 class BertSegTrainer():
@@ -237,7 +237,7 @@ class BertSegTrainer():
         print("Running Test...")
         t0 = time.time()
 
-        labels = []
+        full_labels = []
 
         model.eval()
 
@@ -268,9 +268,10 @@ class BertSegTrainer():
             logits = logits.detach().cpu()  # shape (batch_size, seq_len, num_labels
             full_probs = logits.softmax(dim=-1)
             full_probs = full_probs.tolist()
-            labels += [decode_segmentation(p, 0.5) for p in full_probs]
+            full_labels += [decode_segmentation(p, 0.5) for p in full_probs]
 
-        pred_spans = [split_by_prediction(e, test_dataset[i]['input_ids'].tolist(), test_dataset[i]['offset_mapping'].tolist(), test_dataset.df.iloc[i]['Testo'], test_dataset.tokenizer) for i,e in enumerate(labels)]
+        active_labels = [extract_active_preds(full_labels[i], test_dataset[i]['special_tokens_mask'].tolist()) for i in range(len(full_labels))]
+        pred_spans = [split_by_prediction(e, test_dataset[i]['input_ids'].tolist(), test_dataset[i]['offset_mapping'].tolist(), test_dataset.df.iloc[i]['Testo'], test_dataset.tokenizer) for i,e in enumerate(active_labels)]
         pred_word_bounds = [find_word_bounds(e, test_dataset.df.iloc[i]['Testo']) for i,e in enumerate(pred_spans)]
         norm_pred_word_bounds = [normalize_bounds_by_repertoire(e, test_dataset.df.iloc[i]) for i,e in enumerate(pred_word_bounds)]   
 
@@ -362,7 +363,7 @@ def intersection(A, B):
     end = min(A[1], B[1])
     if(start > end):
         return 0
-    return end - start
+    return end - start + 1
 
 def normalize_bounds_by_repertoire(bounds, sample):
     bounds_w_rep = []
