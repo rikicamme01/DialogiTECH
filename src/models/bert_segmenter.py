@@ -75,7 +75,7 @@ def split_by_prediction(pred:list, input_ids:list, offset_mapping:list, text:str
     j=0
     for i in range(len(offset_mapping)):
         if offset_mapping[i][1] != 0:
-            x = pred[0]
+            x = pred[j]
             j += 1
             if x == 1:
                 spans.append(text[start:offset_mapping[i][1]])

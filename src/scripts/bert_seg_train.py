@@ -46,11 +46,11 @@ model = BertForTokenClassification.from_pretrained(
     model_name, num_labels=2)
 
 model.name = model_name
-train_dataset, val_dataset = train_val_split(df model_name)
+train_dataset, val_dataset = train_val_split(df, model_name)
 test_dataset = IEHyperionDataset(test_df, model_name)
 
 trainer = BertSegTrainer()
-
+"""
 history = trainer.fit(model,
             train_dataset, 
             val_dataset,
@@ -68,7 +68,7 @@ logger.run['val/norm_metrics'] = out['normalized_metrics']
 logger.run['val/metrics'] = out['metrics']
 logger.run['val/loss'] = out['loss']
 logger.run['val/predicted_spans'] = out['predicted_spans']
-
+"""
 
 out = trainer.test(model, test_dataset, config['batch_size'], torch.nn.CrossEntropyLoss(weight = torch.Tensor(config['loss_weights'])))
 logger.run['test/norm_metrics'] = out['normalized_metrics']

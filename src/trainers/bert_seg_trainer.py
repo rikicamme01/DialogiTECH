@@ -279,7 +279,7 @@ class BertSegTrainer():
 
         #output_dict['pred'] = labels
         output_dict['loss'] = avg_test_loss
-        #output_dict['spans'] = pred_spans
+        output_dict['bounds'] = pred_word_bounds
         output_dict['metrics'] = compute_metrics(pred_word_bounds, test_dataset)
         output_dict['normalized_metrics'] = compute_metrics(norm_pred_word_bounds, test_dataset)
 
