@@ -39,8 +39,8 @@ logger.run['config'] = config
 df = pd.read_csv(sys.argv[1] + 'data/processed/splitted_union/ie_hyperion_train.csv', converters={'Stralci': literal_eval, 'Repertori': literal_eval})
 test_df = pd.read_csv(sys.argv[1] + 'data/processed/splitted_union/ie_s2_hyperion_test.csv', converters={'Stralci': literal_eval, 'Repertori': literal_eval})
 
-#model_name = config['model']
-model_name = 'MiBo/SegBert'
+model_name = config['model']
+#model_name = 'MiBo/SegBert'
 
 model = BertForTokenClassification.from_pretrained(
     model_name, num_labels=2)
@@ -50,7 +50,7 @@ train_dataset, val_dataset = train_val_split(df, model_name)
 test_dataset = IEHyperionDataset(test_df, model_name)
 
 trainer = BertSegTrainer()
-"""
+
 history = trainer.fit(model,
             train_dataset, 
             val_dataset,
@@ -68,7 +68,7 @@ logger.run['val/norm_metrics'] = out['normalized_metrics']
 logger.run['val/metrics'] = out['metrics']
 logger.run['val/loss'] = out['loss']
 logger.run['val/predicted_spans'] = out['predicted_spans']
-"""
+
 
 out = trainer.test(model, test_dataset, config['batch_size'], torch.nn.CrossEntropyLoss(weight = torch.Tensor(config['loss_weights'])))
 logger.run['test/norm_metrics'] = out['normalized_metrics']
