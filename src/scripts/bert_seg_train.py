@@ -37,6 +37,7 @@ logger = NeptuneLogger()
 logger.run['config'] = config
 
 df = pd.read_csv(sys.argv[1] + 'data/processed/splitted_union/ie_hyperion_train.csv', converters={'Stralci': literal_eval, 'Repertori': literal_eval})
+df_s2 = pd.read_csv(sys.argv[1] + 'data/processed/splitted_union/ie_s2_hyperion_train.csv', converters={'Stralci': literal_eval, 'Repertori': literal_eval})
 test_df = pd.read_csv(sys.argv[1] + 'data/processed/splitted_union/ie_s2_hyperion_test.csv', converters={'Stralci': literal_eval, 'Repertori': literal_eval})
 
 model_name = config['model']
@@ -46,7 +47,8 @@ model = BertForTokenClassification.from_pretrained(
     model_name, num_labels=2)
 
 model.name = model_name
-train_dataset, val_dataset = train_val_split(df, model_name)
+train_dataset, _ = train_val_split(df, model_name)
+_, val_dataset = train_val_split(df_s2, model_name)
 test_dataset = IEHyperionDataset(test_df, model_name)
 
 trainer = BertSegTrainer()
