@@ -2,11 +2,11 @@
 import pandas as pd
 import sys
 import os
-sys.path.append(os.path.dirname(sys.path[0]) + '/src')
+sys.path.append(os.path.dirname(sys.path[0]))
 from ast import literal_eval
 from datasets.ie_hyperion_dataset import find_word_bounds, clean_text
 
-df = pd.read_csv('../data/processed/pipeline/test/ie_hyperion.csv', converters={'Stralci': literal_eval, 'Repertori': literal_eval})
+df = pd.read_csv('./RepML/data/processed/pipeline/test/ie_hyperion.csv', converters={'Stralci': literal_eval, 'Repertori': literal_eval})
 #df = df.head(50)
 df['Testo'] = df['Testo'].map(clean_text)
 df['Stralci'] = df['Stralci'].map(lambda x: [clean_text(s) for s in x])
