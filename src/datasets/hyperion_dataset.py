@@ -102,6 +102,11 @@ def encode_labels(df):
     le.fit(LABELS)
     return le.transform(df['Repertorio'])
 
+def encode_str_label(rep:str):
+    le = preprocessing.LabelEncoder()
+    le.fit(LABELS)
+    return le.transform([rep])
+
 def decode_labels(encoded_labels):
     le = preprocessing.LabelEncoder()
     le.fit(LABELS)

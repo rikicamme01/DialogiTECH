@@ -13,7 +13,7 @@ class BertSegmenter():
         self.model.to(self.device)
         self.model.eval()
     
-    def predict(self, text:str):
+    def predict(self, text:str) -> list[str]:
         encoded_text = self.tokenizer(text,
                                     return_special_tokens_mask=True,
                                     return_offsets_mapping=True,
