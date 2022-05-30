@@ -1,5 +1,6 @@
 
 from collections import deque
+from typing import List
 
 import torch
 from transformers import AutoModelForTokenClassification, AutoTokenizer
