@@ -44,4 +44,4 @@ class BertRep():
 
         with torch.no_grad():                          
             outputs = self.model(input_ids, attention_mask, output_hidden_states= True)
-        return outputs['hidden_states'][-1]
+        return outputs['hidden_states'][-1].cpu().squeeze().tolist()
