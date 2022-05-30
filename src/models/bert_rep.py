@@ -45,3 +45,19 @@ class BertRep():
         with torch.no_grad():                          
             outputs = self.model(input_ids, attention_mask, output_hidden_states= True)
         return outputs['hidden_states'][-1].cpu().squeeze().tolist()
+    
+    def hidden_states(self, text:list):
+        encoded_text = self.tokenizer(text,
+                                    max_length=512,
+                                    add_special_tokens=True,
+                                    return_attention_mask=True,
+                                    padding='max_length',
+                                    truncation=True,
+                                    return_tensors="pt"
+                                    )
+        input_ids = encoded_text['input_ids'].to(self.device)
+        attention_mask = encoded_text['attention_mask'].to(self.device)
+
+        with torch.no_grad():                          
+            outputs = self.model(input_ids, attention_mask, output_hidden_states= True)
+        return [out.squeeze() for out in outputs['hidden_states']]
