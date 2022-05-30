@@ -15,15 +15,15 @@ class BertRep():
                                     max_length=512,
                                     add_special_tokens=True,
                                     return_attention_mask=True,
-                                    padding=True,
+                                    padding='max_length',
                                     truncation=True,
                                     return_tensors="pt"
                                     )
         input_ids = encoded_text['input_ids'].to(self.device)
         attention_mask = encoded_text['attention_mask'].to(self.device)
 
-                                    
-        logits = self.model(input_ids, attention_mask)['logits']
+        with torch.no_grad():                          
+            logits = self.model(input_ids, attention_mask)['logits']
         logits = logits.detach().cpu()
         probs = logits.softmax(dim=1)
         preds = probs.argmax(dim=1)

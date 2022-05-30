@@ -4,6 +4,8 @@ from collections import deque
 import torch
 from transformers import AutoModelForTokenClassification, AutoTokenizer
 
+import pandas as pd 
+
 
 class BertSegmenter():
     def __init__(self):
@@ -83,5 +85,17 @@ def split_by_prediction(pred:list, input_ids:list, offset_mapping:list, text:str
     if not spans:
         spans.append(text)
     return spans
+
+def normalize(bounds:list, reps:list):
+    norm_bounds = []
+    norm_reps = []
+    
+    for i in range(len(bounds)):
+        if norm_reps and norm_reps[-1] == reps[i]:
+            norm_bounds[-1] = (norm_bounds[-1][0], bounds[i][1])
+        else:
+            norm_bounds.append(bounds[i])
+            norm_reps.append(reps[i])
+    return pd.Series([norm_bounds, norm_reps])
 
     
