@@ -6,6 +6,7 @@ __pycache__/
 # C extensions
 *.so
 
+
 # Distribution / packaging
 .Python
 build/
@@ -131,6 +132,7 @@ dmypy.json
 # custom
 *.sif
 **/.neptune
+**/.vscode
 
 # Mac os ß
 .DS_Store

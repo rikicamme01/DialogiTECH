@@ -30,7 +30,7 @@ class BertRep():
         preds = probs.argmax(dim=1)
         return decode_labels(preds).tolist()
     
-    def last_hidden_state(self, text:list):
+    def last_hidden_state_average(self, text:list):
         encoded_text = self.tokenizer(text,
                                     max_length=512,
                                     add_special_tokens=True,
@@ -44,7 +44,8 @@ class BertRep():
 
         with torch.no_grad():                          
             outputs = self.model(input_ids, attention_mask, output_hidden_states= True)
-        return outputs['hidden_states'][-1].cpu().squeeze().tolist()
+        hs = outputs['hidden_states'][-1].cpu().squeeze()
+        return torch.mean(hs, 0).tolist()
     
     def hidden_states(self, text:list):
         encoded_text = self.tokenizer(text,
