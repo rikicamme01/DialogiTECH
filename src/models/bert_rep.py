@@ -11,7 +11,7 @@ class BertRep():
         self.model = AutoModelForSequenceClassification.from_pretrained('MiBo/RepML').to(self.device)
         self.model.eval()
     
-    def predict(self, text:list[str]) -> list[str]:
+    def predict(self, text:List[str]) -> List[str]:
         encoded_text = self.tokenizer(text,
                                     max_length=512,
                                     add_special_tokens=True,
