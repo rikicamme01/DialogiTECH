@@ -43,7 +43,7 @@ param_grid = {'C': [0.1, 1, 10, 100, 1000],
               'kernel': ['rbf','poly']}
 
 
-grid = GridSearchCV(svm.SVC(class_weight = 'balanced'), param_grid, refit = True, verbose = 2, scoring=make_scorer(f1_score, average='macro'))
+grid = GridSearchCV(svm.SVC(class_weight = 'balanced'), param_grid, refit = True, verbose = 3, scoring=make_scorer(f1_score, average='macro'))
 grid.fit(X_train, y_train)
 
 # print best parameter after tuning
@@ -99,7 +99,7 @@ param_grid = {'C': [0.01, 0.1, 1, 10],
               'kernel': ['rbf','poly']}
 
 
-grid = GridSearchCV(svm.SVC(class_weight='balanced'), param_grid, refit = True, verbose = 2, scoring=make_scorer(f1_score, average='macro'))
+grid = GridSearchCV(svm.SVC(class_weight='balanced'), param_grid, refit = True, verbose = 3, scoring=make_scorer(f1_score, average='macro'))
 grid.fit(X_train, y_train)
 
 # print best parameter after tuning

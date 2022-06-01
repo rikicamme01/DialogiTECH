@@ -66,4 +66,23 @@ class BertRep():
             outputs = self.model(input_ids, attention_mask, output_hidden_states= True)
         return torch.stack(outputs['hidden_states']).tolist()
     
+    def last_hidden_state_concat(self, text:List[str]) -> List[str]:
+        encoded_text = self.tokenizer(text,
+                                    max_length=512,
+                                    add_special_tokens=True,
+                                    return_attention_mask=True,
+                                    padding='max_length',
+                                    truncation=True,
+                                    return_tensors="pt"
+                                    )
+        input_ids = encoded_text['input_ids'].to(self.device)
+        attention_mask = encoded_text['attention_mask'].to(self.device)
+
+        with torch.no_grad():                          
+            outputs = self.model(input_ids, attention_mask, output_hidden_states= True)
+        hs = outputs['hidden_states'][-1].cpu()
+        hs = hs.flatten(start_dim= 1) ## tokens concat
+        hs = torch.mean(hs, 0) ## spans average
+        return hs.tolist()
+    
 
