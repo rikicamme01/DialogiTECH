@@ -1,13 +1,16 @@
 import sys
 import os 
-sys.path.append(os.path.dirname(sys.path[0]) + '/src')
+sys.path.append(os.path.dirname(sys.path[0]))
 import pandas as pd
 from ast import literal_eval
 from models.bert_rep import BertRep
+from loggers.neptune_logger import NeptuneLogger
 
 if len(sys.argv) != 2:
     print("ERROR:  config_file path not provided")
     sys.exit(1)
+
+logger = NeptuneLogger()
 
 train_df = pd.read_csv(sys.argv[1] + 'data/processed/sentipolc/subj_rep_train.csv', converters={'rep': literal_eval, 'spans': literal_eval})
 
