@@ -5,6 +5,12 @@ import pandas as pd
 from ast import literal_eval
 from models.bert_rep import BertRep
 from loggers.neptune_logger import NeptuneLogger
+from sklearn.metrics import make_scorer
+from sklearn import svm
+from sklearn.metrics import f1_score, precision_score, recall_score, accuracy_score, confusion_matrix, ConfusionMatrixDisplay
+from matplotlib import pyplot as plt
+from sklearn.model_selection import GridSearchCV
+
 
 if len(sys.argv) != 2:
     print("ERROR:  config_file path not provided")
@@ -30,18 +36,14 @@ y_train = train_df['iro'].to_list()
 X_test = test_df['hs'].to_list()
 y_test = test_df['iro'].to_list()
 
-from sklearn import svm
-from sklearn.metrics import f1_score, precision_score, recall_score, accuracy_score, confusion_matrix, ConfusionMatrixDisplay
-from matplotlib import pyplot as plt
-from sklearn.model_selection import GridSearchCV
 
-param_grid = {'C': [0.01, 0.1, 1, 10],
-              'gamma': ['scale', 'auto', 1, 0.1, 0.01, 0.001],
+param_grid = {'C': [0.1, 1, 10, 100, 1000],
+              'gamma': ['scale', 'auto', 1, 0.1, 0.01, 0.001, 0.0001],
               'degree': [3, 4, 5],
               'kernel': ['rbf','poly']}
 
 
-grid = GridSearchCV(svm.SVC(class_weight='balanced'), param_grid, refit = True, verbose = 1)
+grid = GridSearchCV(svm.SVC(class_weight = 'balanced'), param_grid, refit = True, verbose = 2, scoring=make_scorer(f1_score, average='macro'))
 grid.fit(X_train, y_train)
 
 # print best parameter after tuning
@@ -60,6 +62,7 @@ rec_no_iro = recall_score(y_test, y_pred, pos_label=0)
 
 f1_iro = f1_score(y_test, y_pred, pos_label=1)
 f1_no_iro = f1_score(y_test, y_pred, pos_label=0)
+f1_mean = f1_score(y_test, y_pred, average='macro')
 
 acc = accuracy_score(y_test, y_pred,)
 
@@ -69,7 +72,7 @@ print('Recall iro: {0:.3f}'.format(rec_iro))
 print('Recall no_iro: {0:.3f}'.format(rec_no_iro))
 print('F1 iro: {0:.3f}'.format(f1_iro))
 print('F1 no_iro: {0:.3f}'.format(f1_no_iro))
-print('F1 mean: {0:.3f}'.format((f1_iro+f1_no_iro)/2))
+print('F1 mean: {0:.3f}'.format(f1_mean))
 print('Accuracy: {0:.3f}'.format(acc))
 
 cm = confusion_matrix(y_test, y_pred, labels=grid.classes_, normalize='true')
@@ -96,7 +99,7 @@ param_grid = {'C': [0.01, 0.1, 1, 10],
               'kernel': ['rbf','poly']}
 
 
-grid = GridSearchCV(svm.SVC(class_weight='balanced'), param_grid, refit = True, verbose = 1)
+grid = GridSearchCV(svm.SVC(class_weight='balanced'), param_grid, refit = True, verbose = 2, scoring=make_scorer(f1_score, average='macro'))
 grid.fit(X_train, y_train)
 
 # print best parameter after tuning
@@ -116,6 +119,7 @@ rec_obj = recall_score(y_test, y_pred, pos_label=0)
 
 f1_subj = f1_score(y_test, y_pred, pos_label=1)
 f1_obj = f1_score(y_test, y_pred, pos_label=0)
+f1_mean = f1_score(y_test, y_pred, average = 'macro')
 
 acc = accuracy_score(y_test, y_pred,)
 
@@ -125,7 +129,7 @@ print('Recall subj: {0:.3f}'.format(rec_subj))
 print('Recall obj: {0:.3f}'.format(rec_obj))
 print('F1 subj: {0:.3f}'.format(f1_subj))
 print('F1 obj: {0:.3f}'.format(f1_obj))
-print('F1 mean: {0:.3f}'.format((f1_obj+f1_subj)/2))
+print('F1 mean: {0:.3f}'.format(f1_mean))
 print('Accuracy: {0:.3f}'.format(acc))
 
 cm = confusion_matrix(y_test, y_pred, labels=grid.classes_, normalize='true')
