@@ -1,3 +1,4 @@
+from xmlrpc.client import Boolean
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 import torch
 from typing import List
@@ -61,4 +62,6 @@ class BertRep():
 
         with torch.no_grad():                          
             outputs = self.model(input_ids, attention_mask, output_hidden_states= True)
-        return [out.squeeze().tolist() for out in outputs['hidden_states']]
+        return torch.stack(outputs['hidden_states'])
+    
+
