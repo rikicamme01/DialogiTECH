@@ -10,6 +10,7 @@ from sklearn import svm
 from sklearn.metrics import f1_score, precision_score, recall_score, accuracy_score, confusion_matrix, ConfusionMatrixDisplay
 from matplotlib import pyplot as plt
 from sklearn.model_selection import GridSearchCV
+import neptune.new as neptune
 
 
 if len(sys.argv) != 2:
@@ -25,7 +26,7 @@ print('Computing embeddings..')
 bert_rep = BertRep()
 train_df['hs'] = train_df['spans'].map(bert_rep.last_hidden_state_average).values.tolist()
 
-test_df = pd.read_csv('../data/processed/sentipolc/subj_rep_test.csv', converters={'rep': literal_eval, 'spans': literal_eval})
+test_df = pd.read_csv(sys.argv[1] + 'data/processed/sentipolc/subj_rep_test.csv', converters={'rep': literal_eval, 'spans': literal_eval})
 test_df['hs'] = test_df['spans'].map(bert_rep.last_hidden_state_average).values.tolist()
 
 
@@ -37,7 +38,7 @@ X_test = test_df['hs'].to_list()
 y_test = test_df['iro'].to_list()
 
 
-param_grid = {'C': [0.1, 1, 10, 100, 1000],
+param_grid = {'C': [0.01, 0.1, 0.5, 1, 10, 100],
               'gamma': ['scale', 'auto', 1, 0.1, 0.01, 0.001, 0.0001],
               'degree': [3, 4, 5],
               'kernel': ['rbf','poly']}
@@ -81,6 +82,17 @@ disp = ConfusionMatrixDisplay(confusion_matrix=cm,
 disp.plot()
 plt.show()
 
+logger.run['irony/pr_iro'] = pr_iro
+logger.run['irony/pr_no_iro'] = pr_no_iro
+logger.run['irony/rec_iro'] = rec_iro
+logger.run['irony/rec_no_iro'] = rec_no_iro
+logger.run['irony/f1_iro'] = f1_iro
+logger.run['irony/f1_no_iro'] = f1_no_iro
+logger.run['irony/f1_macro'] = f1_mean
+logger.run['irony/acc'] = acc
+
+logger.run["confusion_matrix"].upload(neptune.types.File.as_image(disp.figure_))
+
 
 
 #-------------------SUBJECTIVITY------------------------
@@ -93,8 +105,8 @@ X_test = test_df['hs'].to_list()
 y_test = test_df['subj'].to_list()
 
 
-param_grid = {'C': [0.01, 0.1, 1, 10],
-              'gamma': ['scale', 'auto', 1, 0.1, 0.01, 0.001],
+param_grid = {'C': [0.01, 0.1, 0.5, 1, 10, 100],
+              'gamma': ['scale', 'auto', 1, 0.1, 0.01, 0.001, 0.0001],
               'degree': [3, 4, 5],
               'kernel': ['rbf','poly']}
 
@@ -137,3 +149,14 @@ disp = ConfusionMatrixDisplay(confusion_matrix=cm,
                                    display_labels=grid.classes_)
 disp.plot()
 plt.show()
+
+logger.run['subj/pr_subj'] = pr_subj
+logger.run['subj/pr_obj'] = pr_obj
+logger.run['subj/rec_subj'] = rec_subj
+logger.run['subj/rec_obj'] = rec_obj
+logger.run['subj/f1_subj'] = f1_subj
+logger.run['subj/f1_obj'] = f1_obj
+logger.run['subj/f1_macro'] = f1_mean
+logger.run['subj/acc'] = acc
+
+logger.run["subj/confusion_matrix"].upload(neptune.types.File.as_image(disp.figure_))
