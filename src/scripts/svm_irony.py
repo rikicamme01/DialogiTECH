@@ -38,8 +38,8 @@ X_test = test_df['hs'].to_list()
 y_test = test_df['iro'].to_list()
 
 
-param_grid = {'C': [0.01, 0.1, 0.5, 1, 10, 100],
-              'gamma': ['scale', 'auto', 1, 0.1, 0.01, 0.001, 0.0001],
+param_grid = {'C': [0.1, 0.5, 1, 10],
+              'gamma': ['scale', 1, 0.1, 0.01],
               'degree': [3, 4, 5],
               'kernel': ['rbf','poly']}
 
@@ -91,7 +91,7 @@ logger.run['irony/f1_no_iro'] = f1_no_iro
 logger.run['irony/f1_macro'] = f1_mean
 logger.run['irony/acc'] = acc
 
-logger.run["confusion_matrix"].upload(neptune.types.File.as_image(disp.figure_))
+logger.run["irony/confusion_matrix"].upload(neptune.types.File.as_image(disp.figure_))
 
 
 
@@ -105,8 +105,8 @@ X_test = test_df['hs'].to_list()
 y_test = test_df['subj'].to_list()
 
 
-param_grid = {'C': [0.01, 0.1, 0.5, 1, 10, 100],
-              'gamma': ['scale', 'auto', 1, 0.1, 0.01, 0.001, 0.0001],
+param_grid = {'C': [0.1, 0.5, 1, 10],
+              'gamma': ['scale', 1, 0.1, 0.01],
               'degree': [3, 4, 5],
               'kernel': ['rbf','poly']}
 
