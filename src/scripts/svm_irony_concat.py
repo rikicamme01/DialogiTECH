@@ -24,10 +24,10 @@ train_df = pd.read_csv(sys.argv[1] + 'data/processed/sentipolc/subj_rep_train.cs
 print('Computing embeddings..')
 
 bert_rep = BertRep()
-train_df['hs'] = train_df['spans'].map(bert_rep.last_hidden_state_concat).values.tolist()
+train_df['hs'] = train_df['spans'].map(bert_rep.four_last_hidden_state_concat).values.tolist()
 
 test_df = pd.read_csv(sys.argv[1] + 'data/processed/sentipolc/subj_rep_test.csv', converters={'rep': literal_eval, 'spans': literal_eval})
-test_df['hs'] = test_df['spans'].map(bert_rep.last_hidden_state_concat).values.tolist()
+test_df['hs'] = test_df['spans'].map(bert_rep.four_last_hidden_state_concat).values.tolist()
 
 
 print('-------------------IRONY------------------------')
