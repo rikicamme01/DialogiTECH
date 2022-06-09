@@ -44,7 +44,7 @@ param_grid = {'C': [0.1, 0.5, 1, 10],
               'kernel': ['rbf','poly']}
 
 
-grid = GridSearchCV(svm.SVC(class_weight = 'balanced'), param_grid, refit = True, verbose = 3, scoring=make_scorer(f1_score, pos_label=1), cv=5, n_jobs=-1)
+grid = GridSearchCV(svm.SVC(class_weight = 'balanced'), param_grid, refit = True, verbose = 3, scoring=make_scorer(f1_score, average='macro'), cv=5, n_jobs=-1)
 grid.fit(X_train, y_train)
 
 # print best parameter after tuning
@@ -111,7 +111,7 @@ param_grid = {'C': [0.1, 0.5, 1, 10],
               'kernel': ['rbf','poly']}
 
 
-grid = GridSearchCV(svm.SVC(class_weight='balanced'), param_grid, refit = True, verbose = 3, scoring=make_scorer(f1_score, pos_label=1), cv=5, n_jobs=-1)
+grid = GridSearchCV(svm.SVC(class_weight='balanced'), param_grid, refit = True, verbose = 3, scoring=make_scorer(f1_score, average='macro'), cv=5, n_jobs=-1)
 grid.fit(X_train, y_train)
 
 # print best parameter after tuning
@@ -160,3 +160,137 @@ logger.run['subj/f1_macro'] = f1_mean
 logger.run['subj/acc'] = acc
 
 logger.run["subj/confusion_matrix"].upload(neptune.types.File.as_image(disp.figure_))
+
+#-------------------POLARITY------------------------
+print('-------------------POLARITY------------------------')
+
+#-------------------POS-----------------------
+print('-------------------POS-----------------------')
+
+X_train = train_df['hs'].to_list()
+y_train = train_df['opos'].to_list()
+
+X_test = test_df['hs'].to_list()
+y_test = test_df['opos'].to_list()
+
+param_grid = {'C': [0.1, 0.5, 1, 10],
+              'gamma': ['scale', 1, 0.1, 0.01],
+              'degree': [3, 4, 5],
+              'kernel': ['rbf','poly']}
+
+
+grid = GridSearchCV(svm.SVC(class_weight='balanced'), param_grid, refit = True, verbose = 3, scoring=make_scorer(f1_score, average='macro'), cv=5, n_jobs=-1)
+grid.fit(X_train, y_train)
+
+# print best parameter after tuning
+print(grid.best_params_)
+ 
+# print how our model looks after hyper-parameter tuning
+print(grid.best_estimator_)
+
+y_pred = grid.predict(X_test)
+
+pr_opos = precision_score(y_test, y_pred, pos_label=1)
+pr_no_opos = precision_score(y_test, y_pred, pos_label=0)
+
+rec_opos = recall_score(y_test, y_pred, pos_label=1)
+rec_no_opos = recall_score(y_test, y_pred, pos_label=0)
+
+f1_opos = f1_score(y_test, y_pred, pos_label=1)
+f1_no_opos = f1_score(y_test, y_pred, pos_label=0)
+f1_mean_opos = f1_score(y_test, y_pred, average='macro')
+
+acc = accuracy_score(y_test, y_pred,)
+
+print('Precision opos: {0:.3f}'.format(pr_opos))
+print('Precision no opos: {0:.3f}'.format(pr_no_opos))
+print('Recall opos: {0:.3f}'.format(rec_opos))
+print('Recall no_opos: {0:.3f}'.format(rec_no_opos))
+print('F1 opos: {0:.3f}'.format(f1_opos))
+print('F1 no_opos: {0:.3f}'.format(f1_no_opos))
+print('F1 mean: {0:.3f}'.format(f1_mean_opos))
+print('Accuracy: {0:.3f}'.format(acc))
+
+cm = confusion_matrix(y_test, y_pred, labels=grid.classes_, normalize='true')
+disp = ConfusionMatrixDisplay(confusion_matrix=cm,
+                                   display_labels=grid.classes_)
+disp.plot()
+plt.show()
+
+logger.run['opos/pr_opos'] = pr_opos
+logger.run['opos/pr_no_opos'] = pr_no_opos
+logger.run['opos/rec_opos'] = rec_opos
+logger.run['opos/rec_no_opos'] = rec_no_opos
+logger.run['opos/f1_opos'] = f1_opos
+logger.run['opos/f1_no_opos'] = f1_no_opos
+logger.run['opos/f1_macro'] = f1_mean_opos
+logger.run['opos/acc'] = acc
+
+logger.run["opos/confusion_matrix"].upload(neptune.types.File.as_image(disp.figure_))
+
+#-------------------NEG-----------------------
+print('-------------------NEG-----------------------')
+
+X_train = train_df['hs'].to_list()
+y_train = train_df['oneg'].to_list()
+
+X_test = test_df['hs'].to_list()
+y_test = test_df['oneg'].to_list()
+
+param_grid = {'C': [0.1, 0.5, 1, 10],
+              'gamma': ['scale', 1, 0.1, 0.01],
+              'degree': [3, 4, 5],
+              'kernel': ['rbf','poly']}
+
+
+grid = GridSearchCV(svm.SVC(class_weight='balanced'), param_grid, refit = True, verbose = 3, scoring=make_scorer(f1_score, average='macro'), cv=5, n_jobs=-1)
+grid.fit(X_train, y_train)
+
+# print best parameter after tuning
+print(grid.best_params_)
+ 
+# print how our model looks after hyper-parameter tuning
+print(grid.best_estimator_)
+
+y_pred = grid.predict(X_test)
+
+pr_oneg = precision_score(y_test, y_pred, pos_label=1)
+pr_no_oneg = precision_score(y_test, y_pred, pos_label=0)
+
+rec_oneg = recall_score(y_test, y_pred, pos_label=1)
+rec_no_oneg = recall_score(y_test, y_pred, pos_label=0)
+
+f1_oneg = f1_score(y_test, y_pred, pos_label=1)
+f1_no_oneg = f1_score(y_test, y_pred, pos_label=0)
+f1_mean_oneg = f1_score(y_test, y_pred, average='macro')
+
+acc = accuracy_score(y_test, y_pred,)
+
+print('Precision oneg: {0:.3f}'.format(pr_opos))
+print('Precision no oneg: {0:.3f}'.format(pr_no_oneg))
+print('Recall oneg: {0:.3f}'.format(rec_oneg))
+print('Recall no_oneg: {0:.3f}'.format(rec_no_oneg))
+print('F1 oneg: {0:.3f}'.format(f1_oneg))
+print('F1 no_oneg: {0:.3f}'.format(f1_no_oneg))
+print('F1 mean: {0:.3f}'.format(f1_mean_oneg))
+print('Accuracy: {0:.3f}'.format(acc))
+
+cm = confusion_matrix(y_test, y_pred, labels=grid.classes_, normalize='true')
+disp = ConfusionMatrixDisplay(confusion_matrix=cm,
+                                   display_labels=grid.classes_)
+disp.plot()
+plt.show()
+
+logger.run['oneg/pr_oneg'] = pr_oneg
+logger.run['oneg/pr_no_oneg'] = pr_no_oneg
+logger.run['oneg/rec_oneg'] = rec_oneg
+logger.run['oneg/rec_no_oneg'] = rec_no_oneg
+logger.run['oneg/f1_oneg'] = f1_oneg
+logger.run['oneg/f1_no_oneg'] = f1_no_oneg
+logger.run['oneg/f1_macro'] = f1_mean_oneg
+logger.run['oneg/acc'] = acc
+
+logger.run["oneg/confusion_matrix"].upload(neptune.types.File.as_image(disp.figure_))
+
+#Combined f1 score
+logger.run['polarity/f1'] = (f1_opos + f1_oneg) / 2
