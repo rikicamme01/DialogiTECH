@@ -98,6 +98,8 @@ def train_test(X_train, y_train, X_test, y_test, param_grid, scorer, task):
     logger.run[task+'/acc'] = acc
 
     logger.run[task+'/confusion_matrix'].upload(neptune.types.File.as_image(disp.figure_))
+    logger.run[task+'/best_params'] = grid.best_params_
+
 
 if 'irony' in config['task']: 
     y_train = train_df['iro'].to_list()   
