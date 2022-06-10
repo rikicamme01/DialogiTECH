@@ -12,6 +12,7 @@ from loggers.neptune_logger import NeptuneLogger
 from matplotlib import pyplot as plt
 from models.bert_rep import BertRep
 from sklearn import svm
+import sklearn.metrics
 from sklearn.metrics import (ConfusionMatrixDisplay, accuracy_score,
                              confusion_matrix, f1_score, make_scorer,
                              precision_score, recall_score)
@@ -105,19 +106,19 @@ def train_test(X_train, y_train, X_test, y_test, param_grid, scorer, task):
 if 'irony' in config['task']: 
     y_train = train_df['iro'].to_list()   
     y_test = test_df['iro'].to_list()
-    train_test(X_train, y_train, X_test, y_test, config['param_grid'], make_scorer(*config['scorer']), 'irony')
+    train_test(X_train, y_train, X_test, y_test, config['param_grid'], make_scorer(**config['scorer']), 'irony')
 
 if 'subjectivity' in config['task']:
     y_train = train_df['subj'].to_list()   
     y_test = test_df['subj'].to_list()
-    train_test(X_train, y_train, X_test, y_test, config['param_grid'], make_scorer(*config['scorer']), 'subjectivity')
+    train_test(X_train, y_train, X_test, y_test, config['param_grid'], make_scorer(**config['scorer']), 'subjectivity')
 
 if 'polarity' in config['task']:
     y_train = train_df['opos'].to_list()   
     y_test = test_df['opos'].to_list()
-    train_test(X_train, y_train, X_test, y_test, config['param_grid'], make_scorer(*config['scorer']), 'polarity/pos')
+    train_test(X_train, y_train, X_test, y_test, config['param_grid'], make_scorer(**config['scorer']), 'polarity/pos')
 
     y_train = train_df['oneg'].to_list()   
     y_test = test_df['oneg'].to_list()
-    train_test(X_train, y_train, X_test, y_test, config['param_grid'], make_scorer(*config['scorer']), 'polarity/neg')
+    train_test(X_train, y_train, X_test, y_test, config['param_grid'], make_scorer(**config['scorer']), 'polarity/neg')
 
