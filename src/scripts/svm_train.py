@@ -33,6 +33,7 @@ print('config file loaded!')
 seed_everything(config['seed'])
 
 logger = NeptuneLogger()
+logger.run['config'] = config
 
 train_df = pd.read_csv(sys.argv[1] + 'data/processed/sentipolc/subj_rep_train.csv', converters={'rep': literal_eval, 'spans': literal_eval})
 
