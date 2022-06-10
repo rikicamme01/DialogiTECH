@@ -9,7 +9,7 @@ param_grid : {'C': [0.1, 0.5, 1, 10],
               'kernel': ['rbf','poly']}
 
 scorer: { 'score_func' : f1_score,
-           'average': 'macro')
+           'average': 'macro')}
 # (f1_score, average='macro') 
 # (f1_score, pos_label=1)
 task: ['irony', 'subjectivity', 'polarity']
