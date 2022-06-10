@@ -1,5 +1,6 @@
 import os
 import sys
+from numpy import average
 
 import yaml
 
@@ -55,7 +56,7 @@ X_test = test_df['hs'].to_list()
 def train_test(X_train, y_train, X_test, y_test, param_grid, scorer, task):
     print('-------------------' + task + '------------------------')
 
-    grid = GridSearchCV(svm.SVC(class_weight = 'balanced'), param_grid, refit = True, verbose = 3, scoring=make_scorer(**scorer) , cv=5, n_jobs=-1)
+    grid = GridSearchCV(svm.SVC(class_weight = 'balanced'), param_grid, refit = True, verbose = 3, scoring=make_scorer(score_func = f1_score, average='macro') , cv=5, n_jobs=-1)
     grid.fit(X_train, y_train)
     
     print(grid.best_params_)
