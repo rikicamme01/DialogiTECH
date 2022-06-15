@@ -1,4 +1,4 @@
-embeddings_method: 'last_hidden_state_average'
+embeddings_method: 'cls_last_hidden_state'
 # last_hidden_state_average
 # last_hidden_state_concat
 # four_last_hidden_state_concat
