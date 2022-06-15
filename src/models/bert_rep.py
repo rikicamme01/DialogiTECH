@@ -125,6 +125,25 @@ class BertRep():
         hs = torch.mean(hs, 0) ## spans average
         return hs.tolist()
     
+    def cls_last_hidden_state(self, text:List[str]) -> List[str]:
+        encoded_text = self.tokenizer(text,
+                                    max_length=512,
+                                    add_special_tokens=True,
+                                    return_attention_mask=True,
+                                    padding='max_length',
+                                    truncation=True,
+                                    return_tensors="pt"
+                                    )
+        input_ids = encoded_text['input_ids'].to(self.device)
+        attention_mask = encoded_text['attention_mask'].to(self.device)
+
+        with torch.no_grad():                          
+            outputs = self.model(input_ids, attention_mask, output_hidden_states= True)
+        hs = outputs['hidden_states'][-1].cpu()
+        hs = hs[:][0] ## [CLS] hidden states
+        hs = torch.mean(hs, 0) ## spans average
+        return hs.tolist()
+    
 
     
 
