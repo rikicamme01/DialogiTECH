@@ -69,6 +69,9 @@ logger.run['test/loss'] = out['loss']
 cm = plot_confusion_matrix(out['gt'], out['pred'], test_dataset.labels_list())
 logger.run["confusion_matrix"].upload(neptune.types.File.as_image(cm))
 
+fig = plot_loss(history['train_loss'], history['val_loss'])
+logger.run["loss_plot"].upload(neptune.types.File.as_image(fig))
+
 hf_token = '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'
 if config['save']:
     model.push_to_hub("RepML", use_temp_dir=True, use_auth_token=hf_token)
