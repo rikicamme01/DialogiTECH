@@ -37,8 +37,8 @@ logger = NeptuneLogger()
 logger.run['config'] = config
 
 df = pd.read_csv(sys.argv[1] + 'data/processed/splitted_union/ie_hyperion_train.csv', converters={'Stralci': literal_eval, 'Repertori': literal_eval})
-df_s2 = pd.read_csv(sys.argv[1] + 'data/processed/splitted_union/ie_hyperion_train.csv', converters={'Stralci': literal_eval, 'Repertori': literal_eval})
-test_df = pd.read_csv(sys.argv[1] + 'data/processed/splitted_union/ie_hyperion_test.csv', converters={'Stralci': literal_eval, 'Repertori': literal_eval})
+df_s2 = pd.read_csv(sys.argv[1] + 'data/processed/splitted_union/ie_s2_hyperion_train.csv', converters={'Stralci': literal_eval, 'Repertori': literal_eval})
+test_df = pd.read_csv(sys.argv[1] + 'data/processed/splitted_union/ie_s2_hyperion_test.csv', converters={'Stralci': literal_eval, 'Repertori': literal_eval})
 
 model_name = config['model']
 #model_name = 'MiBo/SegBert'
