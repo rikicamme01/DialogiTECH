@@ -30,6 +30,7 @@ logger = NeptuneLogger()
 
 df = pd.read_csv(sys.argv[1] + 'data/processed/splitted_union/ie_s2_hyperion_test.csv', converters={'Stralci': literal_eval, 'Repertori': literal_eval})
 
+test_dataset = IEHyperionDataset(df, 'dbmdz/bert-base-italian-xxl-uncased')
 
 nltk_seg = NLTKSegmenter()
 df['Stralci_predetti'] = df['Testo'].map(nltk_seg.predict).values.tolist()
