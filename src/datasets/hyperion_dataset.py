@@ -71,15 +71,22 @@ class HyperionDataset(torch.utils.data.Dataset):
 
 # Dataset loading and preprocessing
 def fill_null_features(df):
-        for c in ['Domanda','Testo']:
-            for i in range(0,len(df.index)):  
-                if not df[c][i]:
-                    j=i
-                    while j>0: 
-                        j-=1
-                        if df[c][j]:
-                            df[c][i] = df[c][j]
-                            break
+    """
+    For each column in the list ['Domanda','Testo'], if the value of the cell is null, then replace it
+    with the value of the previous cell to obtain a full dataset 
+    
+    :param df: the dataframe
+    """
+    for c in ['Domanda','Testo']:
+        for i in range(0,len(df.index)):  
+            if not df[c][i]:
+                j=i
+                while j>0: 
+                    j-=1
+                    if df[c][j]:
+                        df[c][i] = df[c][j]
+                        break
+
 
 #Delete examples with empty label
 def filter_empty_labels(df):
@@ -113,6 +120,25 @@ def decode_labels(encoded_labels):
     return le.inverse_transform(encoded_labels)
 
 def twitter_preprocess(text:str) -> str:
+    """
+    - It takes a string as input
+    - It returns a string as output
+    - It does the following:
+        - Normalizes terms like url, email, percent, money, phone, user, time, date, number
+        - Annotates hashtags
+        - Fixes HTML tokens
+        - Performs word segmentation on hashtags
+        - Tokenizes the string
+        - Replaces tokens extracted from the text with other expressions
+        - Removes non-alphanumeric characters
+        - Removes extra whitespaces
+        - Removes repeated characters
+        - Removes leading and trailing whitespaces
+    
+    :param text: The text to be processed
+    :type text: str
+    :return: A string with the preprocessed text.
+    """
     text_processor = TextPreProcessor(
     # terms that will be normalized
     normalize=['url', 'email', 'percent', 'money', 'phone', 'user',
@@ -120,6 +146,7 @@ def twitter_preprocess(text:str) -> str:
     # terms that will be annotated
     annotate={"hashtag"},
     fix_html=True,  # fix HTML tokens
+    
     
     unpack_hashtags=True,  # perform word segmentation on hashtags
     
@@ -143,6 +170,17 @@ def twitter_preprocess(text:str) -> str:
     
 
 def train_val_split(df, tok_name,  val_perc=0.2, subsample = False):
+    """
+    It takes a dataframe, a tokenizer name, a validation percentage and a subsample flag. It then splits
+    the dataframe into a training and validation set, and returns a HyperionDataset object for each
+    
+    :param df: the dataframe containing the data
+    :param tok_name: the name of the tokenizer to use
+    :param val_perc: the percentage of the data that will be used for validation
+    :param subsample: if True, subsample the dataset to 50 samples per class, defaults to False
+    (optional)
+    :return: A tuple of two datasets, one for training and one for validation.
+    """
     gb = df.groupby('Repertorio')
     train_list = []
     val_list = []
@@ -159,7 +197,6 @@ def train_val_split(df, tok_name,  val_perc=0.2, subsample = False):
         #train_list.append(train.head(500))
         train_list.append(train)
         val_list.append(val)
-
 
     train_df = pd.concat(train_list)
     val_df = pd.concat(val_list)

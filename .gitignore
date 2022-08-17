@@ -137,3 +137,6 @@ dmypy.json
 # Mac os ß
 .DS_Store
 Desktop.ini
+
+.vscode/
+data/raw/original/hyperion.numbers
