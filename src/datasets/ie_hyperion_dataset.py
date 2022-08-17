@@ -64,7 +64,6 @@ class IEHyperionDataset(torch.utils.data.Dataset):
         return len(self.df.index)
 
 
-#Find bounds starting froma text
 def find_char_bounds(spans: list, text: str) -> list:
     '''
     Given a list of spans and a text, find the start and end indices of each span in the text.
@@ -121,6 +120,14 @@ def find_word_bounds(spans: list, text: str) -> list:
     return bounds
 
 def find_segmentation(bounds, text):
+    """
+    It takes a list of tuples representing boundaries and a string of text, and returns a string of 0s and 1s, where 1s indicate
+    the end of a span
+    
+    :param bounds: a list of tuples, each tuple is a span of text
+    :param text: the text to be segmented
+    :return: A string of 0's and 1's, where 1's indicate the end of a sentence.
+    """
     text_list = text.translate(str.maketrans('', '', string.punctuation)).split()
     segmentation = ['0' for i in range(len(text_list))]
     segmentation[-1] = '1'

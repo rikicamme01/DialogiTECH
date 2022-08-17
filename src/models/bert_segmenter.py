@@ -8,6 +8,8 @@ from transformers import AutoModelForTokenClassification, AutoTokenizer
 import pandas as pd 
 
 
+# The class takes a string as input, tokenizes it, feeds it to the model, and returns a list of
+# strings, where each string is a segment
 class BertSegmenter():
     def __init__(self):
         self.model = AutoModelForTokenClassification.from_pretrained('MiBo/SegBert')
@@ -41,6 +43,16 @@ class BertSegmenter():
         return x
 
 def extract_active_preds(preds:list, special_tokens:list) -> deque:
+    """
+    It takes a list of predictions and a list of special tokens and returns a list of active
+    predictions deleting th ones corresponding to special tokens
+    
+    :param preds: list of predictions
+    :type preds: list
+    :param special_tokens: list of special tokens
+    :type special_tokens: list
+    :return: The active predictions are being returned.
+    """
     active = []
     for i, e in enumerate(special_tokens):
         if(e == 0):
@@ -50,6 +62,14 @@ def extract_active_preds(preds:list, special_tokens:list) -> deque:
          
 
 def decode_segmentation(probs, threshold):  #one sample
+    """
+    It takes a list of probabilities and a threshold, and returns a list of 0s and 1s, where 1s are
+    where the probability is greater than the threshold
+    
+    :param probs: a list of probabilities for each word in the sentence
+    :param threshold: the threshold for the probability of a word being a keyword
+    :return: A list of 1s and 0s.
+    """
     if threshold < 0 or threshold > 1:
         return None
     segmentation = []
@@ -62,6 +82,20 @@ def decode_segmentation(probs, threshold):  #one sample
     return segmentation
 
 def split_by_prediction(pred:list, input_ids:list, offset_mapping:list, text:str, tokenizer) -> list:
+    """
+    Split the text propagating the boundary to the last subword token
+    
+    :param pred: list of predictions
+    :type pred: list
+    :param input_ids: the tokenized input text
+    :type input_ids: list
+    :param offset_mapping: a list of tuples, where each tuple is (start_offset, end_offset)
+    :type offset_mapping: list
+    :param text: the text to be split
+    :type text: str
+    :param tokenizer: the tokenizer used to tokenize the text
+    :return: a list of strings, where each string is a span of text.
+    """
     subword_flags = [False for i in range(len(input_ids))]
     for i in  range(len(input_ids)):
         if offset_mapping[i][1] != 0:
@@ -88,6 +122,16 @@ def split_by_prediction(pred:list, input_ids:list, offset_mapping:list, text:str
     return spans
 
 def normalize(bounds:list, reps:list):
+    """
+    It takes a list of boundaries and if adjacent segments corresponds to the same repertoires the segments are joined
+    
+    :param bounds: list of tuples, each tuple is a start and end of a segment
+    :type bounds: list
+    :param reps: list of the number of repetitions of each interval
+    :type reps: list
+    :return: A series of two lists. The first list is a list of tuples, where each tuple is a start and
+    end point of a range, and the second ais the list of repertoires
+    """
     norm_bounds = []
     norm_reps = []
     

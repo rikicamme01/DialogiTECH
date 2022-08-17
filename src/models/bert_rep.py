@@ -5,6 +5,8 @@ from typing import List
 
 from datasets.hyperion_dataset import decode_labels
 
+# It loads the pretrained model for repertoires prediction and the tokenizer, and provides methods to extract the hidden states of
+# the model.
 class BertRep():
     def __init__(self):
         self.tokenizer = AutoTokenizer.from_pretrained('MiBo/RepML')

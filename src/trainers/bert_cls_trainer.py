@@ -11,6 +11,7 @@ from utils.utils import format_time, plot_confusion_matrix, plot_f1
 from utils.utils import plot_loss
 
 
+# This class is a wrapper for the training and testing of a Bert model for classification of dicscursive repertoires
 class BertClsTrainer():
     def __init__(self) -> None:
         self.metric_collection = torchmetrics.MetricCollection({

@@ -14,7 +14,7 @@ from utils.utils import format_time
 from datasets.ie_hyperion_dataset import find_segmentation_by_bounds, find_word_bounds
 from models.bert_segmenter import decode_segmentation, split_by_prediction, extract_active_preds
 
-
+# This class is a wrapper for the training and testing of a Bert model for text segmentation
 class BertSegTrainer():
 
     def fit(self, model, train_dataset, val_dataset, batch_size, lr, n_epochs, loss_fn):
@@ -292,7 +292,8 @@ class BertSegTrainer():
         print("  Test took: {:}".format(test_time))
 
         return output_dict
-    
+
+# computes 'windowdiff' 'ghd' 'pk'  'iou'
 def compute_metrics(preds, dataset):
     met_list = []
     for i in range(len(dataset.df.index)):
@@ -330,6 +331,13 @@ def compute_metrics(preds, dataset):
 
 
 def IoU(A, B):
+    """
+    Computes Intersection over Union
+    
+    :param A: The first interval
+    :param B: The ground truth bounding box
+    :return: The intersection over union of two intervals.
+    """
     if A == B:
         return 1
     start = max(A[0], B[0])
@@ -356,6 +364,9 @@ def compute_IoUs(pred_bounds, gt_spans):
 
 
 def intersection(A, B):
+    """
+    Compoute intersection between two span boundaries represented as tuples (start, end)
+    """
     if A == B:
         return 1
     start = max(A[0], B[0])
@@ -365,6 +376,14 @@ def intersection(A, B):
     return end - start + 1
 
 def normalize_bounds_by_repertoire(bounds, sample):
+    """
+    For each bound in the list of bounds, find the ground truth bound that it has the most overlap
+    with, and then group all bounds that have the same ground truth bound together
+    
+    :param bounds: list of tuples, each tuple is a bounding box
+    :param sample: a dictionary with the following keys:
+    :return: A list of tuples, where each tuple is a span of text.
+    """
     bounds_w_rep = []
     for bound in bounds:
         intersections = []
