@@ -1,4 +1,4 @@
 # RepML
-Thesis project for Msc in computer science in University of Padova.
-Transformers for text segmentation and classification in discursive repetorires.
-The project is in progress, more details and a complete readme will be written in the future
+This repository contains all the code written for the experiments of my MSc thesis in computer science at the University of Padova (Italy).
+# Project
+dfsdfsdf
