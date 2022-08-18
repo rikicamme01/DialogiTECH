@@ -7,7 +7,7 @@ All the experiments discussed in the thesis are implementend in this repository.
 
 ## Structure
 * **data**: datasets grouped by raw, processed ...
-* **notebooks**: notebooks for darta analysis or quick prototyping. 
+* **notebooks**: notebooks for data analysis or quick prototyping. 
 * **src**: Structured code for training and testing of of models.
 
 
