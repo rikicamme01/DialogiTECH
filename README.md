@@ -23,7 +23,7 @@ All the experiments discussed in the thesis are implementend in this repository.
 * **config**: YAML files for scripts configuration
 
 ## Experiments
-Each script allows to replicate the experiments.
+Each script in src/scripts allows to replicate the experiments.
 
 WARNING: Remember to set Neptune logger token or comment logger lines in the script if you don't want to log results. Remember to set the huggingface token if you want to save the trained model (save=True in the config files)
 To replicate results leave default seed in config files.
@@ -33,5 +33,3 @@ Scipts:
 * bert_cls_seg.py (Chapter 4): train and test of BERT for text segmentation as a supervised task.
 * pipeline.py (Chapter 5): test of the entire pipeline for dicursive repertoires prediciton (from text to a sequnence of DR).
 * svm_train.py (Chapter 6): script for SENTIPOLC challenge. Extraction of sentence embedding based on DR and then we train an SVM that takes in input BERT embeddings for solving the challange. 
-
-
