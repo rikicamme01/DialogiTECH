@@ -4,6 +4,7 @@ import torch
 from typing import List
 
 from datasets.hyperion_dataset import decode_labels
+from datasets.hyperion_dataset import decode_labels_vector
 
 # It loads the pretrained model for repertoires prediction and the tokenizer, and provides methods to extract the hidden states of
 # the model.
@@ -14,7 +15,7 @@ class BertRep():
         self.model = AutoModelForSequenceClassification.from_pretrained('MiBo/RepML').to(self.device)
         self.model.eval()
     
-    def predict(self, text:List[str]) -> List[str]:
+    def predict_vector(self, text:List[str]) -> List[str]:
         encoded_text = self.tokenizer(text,
                                     max_length=512,
                                     add_special_tokens=True,
@@ -30,9 +31,9 @@ class BertRep():
             logits = self.model(input_ids, attention_mask)['logits']
         logits = logits.detach().cpu()
         probs = logits.softmax(dim=1)
-        preds = probs.argmax(dim=1)
-        decoded_predictions = decode_labels_vector(probs, probs.tolist())
-        return decoded_predictions
+        #preds = probs.argmax(dim=1)
+        decoded_predictions = decode_labels_vector(probs)
+        return list(decoded_predictions)
         #return decode_labels(preds).tolist()
 
     def predict(self, text:List[str]) -> List[str]:

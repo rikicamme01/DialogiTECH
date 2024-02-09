@@ -32,7 +32,8 @@ LABELS = [
                 'ridimensionamento',
                 'sancire',
                 'specificazione',
-                'valutazione'
+                'valutazione',
+                #'riferimento all'obiettivo'
         ]
 
 class HyperionDataset(torch.utils.data.Dataset):
@@ -119,11 +120,10 @@ def decode_labels(encoded_labels):
     le.fit(LABELS)
     return le.inverse_transform(encoded_labels)
 
-def decode_labels_vector(encoded_labels, probabilities):
-    le = preprocessing.LabelEncoder()
-    le.fit(LABELS)
-    decoded_labels = le.inverse_transform(encoded_labels)
-    return list(zip(decoded_labels, probabilities))
+def decode_labels_vector(probabilities):
+    if len(probabilities) != len(LABELS):
+        raise ValueError("Le liste delle chiavi e dei valori devono avere la stessa lunghezza.")
+    return dict(zip(LABELS, probabilities))
 
 def twitter_preprocess(text:str) -> str:
     """
