@@ -119,6 +119,12 @@ def decode_labels(encoded_labels):
     le.fit(LABELS)
     return le.inverse_transform(encoded_labels)
 
+def decode_labels_vector(encoded_labels, probabilities):
+    le = preprocessing.LabelEncoder()
+    le.fit(LABELS)
+    decoded_labels = le.inverse_transform(encoded_labels)
+    return list(zip(decoded_labels, probabilities))
+
 def twitter_preprocess(text:str) -> str:
     """
     - It takes a string as input

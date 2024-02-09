@@ -31,6 +31,27 @@ class BertRep():
         logits = logits.detach().cpu()
         probs = logits.softmax(dim=1)
         preds = probs.argmax(dim=1)
+        decoded_predictions = decode_labels_vector(probs, probs.tolist())
+        return decoded_predictions
+        #return decode_labels(preds).tolist()
+
+    def predict(self, text:List[str]) -> List[str]:
+        encoded_text = self.tokenizer(text,
+                                    max_length=512,
+                                    add_special_tokens=True,
+                                    return_attention_mask=True,
+                                    padding='max_length',
+                                    truncation=True,
+                                    return_tensors="pt"
+                                    )
+        input_ids = encoded_text['input_ids'].to(self.device)
+        attention_mask = encoded_text['attention_mask'].to(self.device)
+
+        with torch.no_grad():                          
+            logits = self.model(input_ids, attention_mask)['logits']
+        logits = logits.detach().cpu()
+        probs = logits.softmax(dim=1)
+        preds = probs.argmax(dim=1)
         return decode_labels(preds).tolist()
     
     def last_hidden_state_average(self, text:List[str]) -> List[str]:
