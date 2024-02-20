@@ -2,6 +2,7 @@
 import pandas as pd
 import sys
 import os
+import itertools
 sys.path.append(os.path.dirname(sys.path[0]))
 from ast import literal_eval
 from datasets.ie_hyperion_dataset import find_word_bounds, clean_text
@@ -99,9 +100,10 @@ print("\nSTRALCI:")
 for index, seg in enumerate(stralci):
     print(f'{index}: [{seg}]')
 print("\nANALISI:")
-for index, rep in enumerate(rep_predict):
-    print(f'{index}: [{rep}]')
-#print(rep_predict)
+for index, dictionary in enumerate(rep_predict):
+    print(f"{index}: ")
+    for chiave, valore in itertools.islice(sorted(dictionary.items(), key=lambda item: item[1], reverse=True), 5):
+        print(f"[ {chiave}: {round(valore*100)}% ]")
 
 # %%
 df['Precision'] =  df.apply(lambda x: precision(x['Bounds_predetti'], x['Bounds'], x['Repertori_predetti'], x['Repertori']), axis=1)

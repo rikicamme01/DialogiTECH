@@ -120,10 +120,19 @@ def decode_labels(encoded_labels):
     le.fit(LABELS)
     return le.inverse_transform(encoded_labels)
 
+'''probabilities is a tensor converted into a list of n elements, one for each stralcio predicted. 
+    probabilities[i] = is a list of 23 probabilities for each repertorio
+
+    dict_per_stralci is an array of dictionaries, one for each stralcio
+ '''
+
 def decode_labels_vector(probabilities):
-    if len(probabilities) != len(LABELS):
-        raise ValueError("Le liste delle chiavi e dei valori devono avere la stessa lunghezza.")
-    return dict(zip(LABELS, probabilities))
+    dict_per_stralci = []
+    for prob in probabilities:
+        if len(prob) != len(LABELS):
+            raise ValueError(f"Le liste delle chiavi e dei valori devono avere la stessa lunghezza: {len(prob)},{len(LABELS)}")
+        dict_per_stralci.append(dict(zip(LABELS, prob)))  
+    return dict_per_stralci
 
 def twitter_preprocess(text:str) -> str:
     """

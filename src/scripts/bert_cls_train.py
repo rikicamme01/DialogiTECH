@@ -1,3 +1,4 @@
+#%%
 import yaml
 import os
 import sys 
@@ -5,7 +6,7 @@ sys.path.append(os.path.dirname(sys.path[0]))
 
 import pandas as pd
 import torch
-import neptune.new as neptune
+import neptune
 
 from transformers import AutoModelForSequenceClassification
 from transformers import AutoTokenizer
@@ -31,7 +32,7 @@ except Exception as e:
     print('Error reading the config file')
     sys.exit(1)
 print('config file loaded!')
-
+#%%
 seed_everything(config['seed'])
 
 df = pd.read_csv(sys.argv[1] + 'data/processed/splitted_full/hyperion_train.csv', na_filter=False)
@@ -41,7 +42,8 @@ logger = NeptuneLogger()
 logger.run['config'] = config
 
 
-model_name = config['model']
+model_name = config['model'] # runno una volta per copiarmelo sul mio hugging e dopo modifico file config impostando il mio "nuovo" come modello predefinito su
+                            # su cui allenare
 
 train_dataset, val_dataset = train_val_split(df, model_name, subsample=False)
 test_dataset = HyperionDataset(test_df, model_name)
@@ -49,7 +51,7 @@ test_dataset = HyperionDataset(test_df, model_name)
 trainer = BertClsTrainer()
 
 
-model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=23)
+model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=23) #
 model.name = model_name
 
 history = trainer.fit(model,
@@ -72,7 +74,10 @@ logger.run["confusion_matrix"].upload(neptune.types.File.as_image(cm))
 fig = plot_loss(history['train_loss'], history['val_loss'])
 logger.run["loss_plot"].upload(neptune.types.File.as_image(fig))
 
-hf_token = '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'
+
+#%%
+#hf_token = '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' # con nuovo profilo
+hf_token = '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'
 if config['save']:
-    model.push_to_hub("RepML", use_temp_dir=True, use_auth_token=hf_token)
-    AutoTokenizer.from_pretrained(model_name).push_to_hub("RepML", use_temp_dir=True, use_auth_token=hf_token)
+    model.push_to_hub("BERT_DialogicaPD", use_temp_dir=True, use_auth_token=hf_token)
+    AutoTokenizer.from_pretrained(model_name).push_to_hub("BERT_DialogicaPD", use_temp_dir=True, use_auth_token=hf_token)

@@ -15,7 +15,7 @@ class BertRep():
         self.model = AutoModelForSequenceClassification.from_pretrained('MiBo/RepML').to(self.device)
         self.model.eval()
     
-    def predict_vector(self, text:List[str]) -> List[str]:
+    def predict_vector(self, text:List[str]) -> List[dict]:
         encoded_text = self.tokenizer(text,
                                     max_length=512,
                                     add_special_tokens=True,
@@ -31,10 +31,8 @@ class BertRep():
             logits = self.model(input_ids, attention_mask)['logits']
         logits = logits.detach().cpu()
         probs = logits.softmax(dim=1)
-        #preds = probs.argmax(dim=1)
-        decoded_predictions = decode_labels_vector(probs)
-        return list(decoded_predictions)
-        #return decode_labels(preds).tolist()
+        decoded_predictions = decode_labels_vector(probs.tolist())
+        return decoded_predictions
 
     def predict(self, text:List[str]) -> List[str]:
         encoded_text = self.tokenizer(text,
