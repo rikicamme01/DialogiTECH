@@ -2,11 +2,16 @@
 import yaml
 import os
 import sys 
-sys.path.append(os.path.dirname(sys.path[0]))
 
+sys.path.append(os.path.dirname(sys.path[0]))
+#sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 import pandas as pd
 import torch
 import neptune
+run = neptune.init_run(
+    project="riccardocamellini01/DialogiTECH",
+    api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI5NTkzYjg4Yy1jMTVhLTQ2NDktYmFjOC0yNzZmZDEyMDFlOTcifQ==",
+) 
 
 from transformers import AutoModelForSequenceClassification
 from transformers import AutoTokenizer
@@ -14,9 +19,23 @@ from datasets.hyperion_dataset import HyperionDataset
 from datasets.hyperion_dataset import train_val_split
 from trainers.bert_cls_trainer import BertClsTrainer
 from utils.utils import seed_everything
-from loggers.neptune_logger import NeptuneLogger
+#from loggers.neptune_logger import NeptuneLogger
+#from neptune.new.integrations.pytorch_lightning import NeptuneLogger
 from utils.utils import plot_confusion_matrix, plot_f1, plot_loss
+#%%
+script_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# Costruisci il percorso relativo del file da aprire
+try: 
+    with open (script_dir + '/config/bert_seg_train.yml', 'r') as file:
+        config = yaml.safe_load(file)        
+except Exception as e:
+    print('Error reading the config file')
+    sys.exit(1)
+print('config file loaded!')
+
+#%%
+'''print (sys.argv)
 if len(sys.argv) != 2:
     print("ERROR:  config_file path not provided")
     sys.exit(1)
@@ -26,20 +45,19 @@ if len(sys.argv) != 2:
 # './RepML/ cluster
 
 try: 
-    with open (sys.argv[1] + 'config/bert_cls_train.yml', 'r') as file:
+    with open (sys.argv[1] +'config/bert_cls_train.yml', 'r') as file:
         config = yaml.safe_load(file)        
 except Exception as e:
     print('Error reading the config file')
     sys.exit(1)
-print('config file loaded!')
+print('config file loaded!')'''
 #%%
 seed_everything(config['seed'])
 
-df = pd.read_csv(sys.argv[1] + 'data/processed/splitted_full/hyperion_train.csv', na_filter=False)
-test_df = pd.read_csv(sys.argv[1] + 'data/processed/splitted_full/hyperion_test.csv', na_filter=False)
+df = pd.read_csv(script_dir + '/data/processed/splitted_full/hyperion_train.csv', na_filter=False)
+test_df = pd.read_csv(script_dir + '/data/processed/splitted_full/hyperion_test.csv', na_filter=False)
 
-logger = NeptuneLogger()
-logger.run['config'] = config
+run['config'] = config
 
 
 model_name = config['model'] # runno una volta per copiarmelo sul mio hugging e dopo modifico file config impostando il mio "nuovo" come modello predefinito su
@@ -54,6 +72,7 @@ trainer = BertClsTrainer()
 model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=23) #
 model.name = model_name
 
+#%%
 history = trainer.fit(model,
             train_dataset, 
             val_dataset,
@@ -81,3 +100,7 @@ hf_token = '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'
 if config['save']:
     model.push_to_hub("BERT_DialogicaPD", use_temp_dir=True, use_auth_token=hf_token)
     AutoTokenizer.from_pretrained(model_name).push_to_hub("BERT_DialogicaPD", use_temp_dir=True, use_auth_token=hf_token)
+    print('Model correctly push to hub')
+else:
+    print("The 'save' field in config file has to be True")
+# %%
