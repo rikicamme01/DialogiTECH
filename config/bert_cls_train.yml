@@ -1,4 +1,4 @@
-save: False 
+save: True 
 seed: 4321
 batch_size: 24
 n_epochs: 6
@@ -9,6 +9,7 @@ model: 'dbmdz/bert-base-italian-xxl-uncased'
 #'m-polignano-uniba/bert_uncased_L-12_H-768_A-12_italian_alb3rt0'
 #'dbmdz/bert-base-italian-xxl-uncased'
 #'bert-base-multilingual-cased'
+#'RiCam/BERT_DialogicaPD'
 
 loss_weights: [50.0, 6.033542976939204, 1.1307746998529562, 4.603127423106747, 8.847396226415094, 2.379415897230028,
  4.643299276605266, 1.0716384690359466, 4.579399456721239, 2.9731579995133712, 1.4790204409639998, 6.456297371391711, 4.214576723993989, 2.7715155203895314, 2.4756230639256547, 4.751559569826629, 1.891982977048535,

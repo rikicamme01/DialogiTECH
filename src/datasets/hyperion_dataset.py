@@ -96,7 +96,7 @@ def filter_empty_labels(df):
 
 #Convert to lower case
 def to_lower_case(df):
-    return df.applymap(str.lower)
+    return df.map(str.lower)
 
 
 #Lables uniformation uncased

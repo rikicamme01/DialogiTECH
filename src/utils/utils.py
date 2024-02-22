@@ -1,3 +1,4 @@
+#%%
 import random
 import os
 
@@ -54,3 +55,4 @@ def plot_confusion_matrix(y_true, pred, labels):
     disp = ConfusionMatrixDisplay.from_predictions(y_true, pred, display_labels=labels, normalize='true', values_format='.2f')
     disp.plot(cmap="Blues", values_format='.2g',xticks_rotation='vertical', ax=ax)
     return disp.figure_
+# %%
