@@ -8,11 +8,12 @@ from datasets.hyperion_dataset import decode_labels_vector
 
 # It loads the pretrained model for repertoires prediction and the tokenizer, and provides methods to extract the hidden states of
 # the model.
+#'MiBo/RepML'
 class BertRep():
     def __init__(self):
-        self.tokenizer = AutoTokenizer.from_pretrained('MiBo/RepML')
+        self.tokenizer = AutoTokenizer.from_pretrained('RiCam/BERT_DialogicaPD')
         self.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-        self.model = AutoModelForSequenceClassification.from_pretrained('MiBo/RepML').to(self.device)
+        self.model = AutoModelForSequenceClassification.from_pretrained('RiCam/BERT_DialogicaPD').to(self.device)
         self.model.eval()
     
     def predict_vector(self, text:List[str]) -> List[dict]:

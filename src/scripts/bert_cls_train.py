@@ -2,6 +2,7 @@
 import yaml
 import os
 import sys 
+import time
 
 sys.path.append(os.path.dirname(sys.path[0]))
 #sys.path.append(os.path.dirname(os.path.dirname(__file__)))
@@ -30,7 +31,7 @@ try:
 except Exception as e:
     print('Error reading the config file')
     sys.exit(1)
-print('config file loaded!')
+print(f"config file loaded and save is[{config['save']}]")
 
 #%%
 seed_everything(config['seed'])
@@ -54,6 +55,7 @@ model = AutoModelForSequenceClassification.from_pretrained(model_name, num_label
 model.name = model_name
 
 #%%
+start_time = time.time()
 history = trainer.fit(model,
             train_dataset, 
             val_dataset,
@@ -73,6 +75,7 @@ run["confusion_matrix"].upload(neptune.types.File.as_image(cm))
 
 fig = plot_loss(history['train_loss'], history['val_loss'])
 run["loss_plot"].upload(neptune.types.File.as_image(fig))
+print(f"Training complete in {time.time - start_time} seconds")
 
 
 #%%
