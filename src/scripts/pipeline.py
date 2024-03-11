@@ -82,6 +82,9 @@ bert_rep = BertRep()
 df['Stralci_predetti'] = df['Testo'].map(bert_seg.predict).values.tolist()
 df['Bounds_predetti'] = df.apply(lambda x: find_word_bounds(x['Stralci_predetti'], x['Testo']), axis=1).values.tolist()
 df['Repertori_predetti'] = df['Stralci_predetti'].map(bert_rep.predict).values.tolist()
+#df['Repertori_predetti'] = df['Stralci_predetti'].apply(bert_rep.predict_vector)
+#%%
+df.to_excel('prova.xlsx', )
 
 # %%
 from models.bert_rep import BertRep
@@ -134,3 +137,4 @@ print(df['Norm_precision'].mean())
 print(df['Norm_recall'].mean())
 print(df['Norm_f1'].mean())
 print(df['Norm_IoU'].mean())
+# %%

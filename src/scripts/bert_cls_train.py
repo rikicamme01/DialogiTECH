@@ -21,6 +21,7 @@ from datasets.hyperion_dataset import train_val_split
 from trainers.bert_cls_trainer import BertClsTrainer
 from utils.utils import seed_everything
 from utils.utils import plot_confusion_matrix, plot_f1, plot_loss
+
 #%%
 script_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -42,8 +43,7 @@ test_df = pd.read_csv(script_dir + '/data/processed/splitted_full/hyperion_test.
 run['config'] = config
 
 
-model_name = config['model'] # runno una volta per copiarmelo sul mio hugging e dopo modifico file config impostando il mio "nuovo" come modello predefinito su
-                            # su cui allenare
+model_name = config['model']
 
 train_dataset, val_dataset = train_val_split(df, model_name, subsample=False)
 test_dataset = HyperionDataset(test_df, model_name)
@@ -75,7 +75,6 @@ run["confusion_matrix"].upload(neptune.types.File.as_image(cm))
 
 fig = plot_loss(history['train_loss'], history['val_loss'])
 run["loss_plot"].upload(neptune.types.File.as_image(fig))
-print(f"Training complete in {time.time - start_time} seconds")
 
 
 #%%

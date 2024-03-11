@@ -1,3 +1,4 @@
+#%%
 import yaml
 import os
 import sys 
@@ -7,7 +8,12 @@ import pandas as pd
 import torch
 from transformers import BertForTokenClassification
 from ast import literal_eval
-import neptune.new as neptune
+import neptune
+run = neptune.init_run(
+    project="riccardocamellini01/DialogiTECH",
+    api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI5NTkzYjg4Yy1jMTVhLTQ2NDktYmFjOC0yNzZmZDEyMDFlOTcifQ==",
+) 
+
 from transformers import AutoTokenizer
 
 from utils.utils import plot_loss, seed_everything

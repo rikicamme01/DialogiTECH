@@ -9,6 +9,7 @@ from datasets.hyperion_dataset import decode_labels_vector
 # It loads the pretrained model for repertoires prediction and the tokenizer, and provides methods to extract the hidden states of
 # the model.
 #'MiBo/RepML'
+#'RiCam/BERT_DialogicaPD'
 class BertRep():
     def __init__(self):
         self.tokenizer = AutoTokenizer.from_pretrained('RiCam/BERT_DialogicaPD')
