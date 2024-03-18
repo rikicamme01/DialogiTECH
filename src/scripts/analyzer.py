@@ -41,20 +41,14 @@ class analyzer():
         df['Repertori_predetti'] = df['Stralci_predetti'].map(self.bert_rep.predict_vector).values.tolist()
         #df['Repertori_predetti'] = df['Stralci_predetti'].apply(bert_rep.predict_vector)
    
-        self.csv_to_excel(df)
+        self.df_to_excel(df)
 
 
 
-    def csv_to_excel(df):
+    def df_to_excel(df):
         wb = Workbook()
         ws = wb.active
-        ws.append(['Testo', 'Stralcio', 'Repertorio predetto','Accuratezza'])
-        for i in LABELS:
-            ws.append([i])
-
-        validation = DataValidation(type = 'list', formula1 = lambda x: ','.join(LABELS))
-        ws.add_data_validation(validation)
-        validation.add(ws['Repertorio predetto'])
+        columns_format(ws)
 
         for row in df.iterrows():
             stralci_csv = row['Stralci_predetti'] # lista di stralci per quel testo
@@ -85,3 +79,13 @@ class analyzer():
                 pass
 
         wb.save('prova.xlsx')
+
+    
+    def columns_format(ws):
+        #creazione colonne intestazione
+        # set up DataValidation
+        columns = ['Domanda', 'Età', 'Genere', 'Ruolo', 'Testo', 'Stralcio', 'Repertorio predetto','Accuratezza/proposte']
+
+        validation = DataValidation(type = 'list', formula1 = lambda x: ','.join(LABELS))
+        ws.add_data_validation(validation)
+        validation.add(ws['Repertorio predetto'])

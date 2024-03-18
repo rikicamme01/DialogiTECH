@@ -37,7 +37,7 @@ print(f"config file loaded and save is[{config['save']}]")
 #%%
 seed_everything(config['seed'])
 
-df = pd.read_csv(script_dir + '/data/processed/splitted_full/hyperion_train.csv', na_filter=False)
+df = pd.read_csv(script_dir + '/data/processed/splitted_full/dialogiTECH_no Rif.Ob.csv', na_filter=False)
 test_df = pd.read_csv(script_dir + '/data/processed/splitted_full/hyperion_test.csv', na_filter=False)
 
 run['config'] = config

@@ -33,7 +33,7 @@ LABELS = [
                 'sancire',
                 'specificazione',
                 'valutazione',
-                'riferimento all\'obiettivo',
+                #'riferimento all\'obiettivo',
         ]
 
 class HyperionDataset(torch.utils.data.Dataset):
