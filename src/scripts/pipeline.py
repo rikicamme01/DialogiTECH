@@ -83,8 +83,6 @@ df['Stralci_predetti'] = df['Testo'].map(bert_seg.predict).values.tolist()
 df['Bounds_predetti'] = df.apply(lambda x: find_word_bounds(x['Stralci_predetti'], x['Testo']), axis=1).values.tolist()
 df['Repertori_predetti'] = df['Stralci_predetti'].map(bert_rep.predict).values.tolist()
 #df['Repertori_predetti'] = df['Stralci_predetti'].apply(bert_rep.predict_vector)
-#%%
-df.to_excel('prova.xlsx', )
 
 # %%
 from models.bert_rep import BertRep
@@ -93,7 +91,7 @@ from models.bert_segmenter import BertSegmenter
 bert_rep = BertRep()
 bert_seg = BertSegmenter()
 #df['Repertori_predetti'] = df['Stralci_predetti'].map(bert_rep.predict).values.tolist()
-text = "Nn facciano di tutta un erba un fascio …….purtroppo si rifiuta il lavoro anche xche nn si vuole lavorare sabato e domenica"
+text = "Forse è un territorio con una alta percentuale di anziani (forse è una criticità)  Necessità di maggiori spazi di aggregazione Aumento delle difficoltà relazionali dei giovani"
     
 stralci = bert_seg.predict(text)
 
@@ -137,4 +135,10 @@ print(df['Norm_precision'].mean())
 print(df['Norm_recall'].mean())
 print(df['Norm_f1'].mean())
 print(df['Norm_IoU'].mean())
+# %% TEST ANALYZER
+from analyzer import Analyzer
+analyzer = Analyzer()
+path = "/Users/riccardo/VSCode/DialogiTECH/src/scripts/Example_output2.xlsx"
+
+analyzer.predict(path)
 # %%

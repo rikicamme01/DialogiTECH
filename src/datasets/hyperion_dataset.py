@@ -35,6 +35,27 @@ LABELS = [
                 'valutazione',
                 #'riferimento all\'obiettivo',
         ]
+MIN_COLS_ALLOWED = [
+                'Testo',
+                'Stralcio',
+                'Repertorio',
+                'Alternative',
+                'Età',
+                'Genere',
+                'Ruolo',
+]
+COLS_ALLOWED_PLOTTER =[
+                    'num_risposta',
+                    'num_domanda', #-> da ricordarsi quando si creerà file excel con risposte forms
+                    'Età','età','Eta','ETÀ',
+                    'Genere', 'GENERE', 'genere', 'Sesso', 'sesso', 'SESSO',
+                    'Ruolo', 'RUOLO', 'ruolo',
+                    'Repertorio','REPERTORIO', 'repertorio',
+                    'Arcipelago', 'ARCIPELAGO', 'arcipelago','Ads', 
+]
+REP_GENERATIVI = ['descrizione','proposta','considerazione','anticipazione','riferimento all\'obiettivo']
+REP_IBRIDI = ['possibilità', 'valutazione', 'dichiarazione di intenti', 'specificazione', 'conferma', 'prescrizione', 'ridimensionamento', 'implicazioni']
+REP_MANTENIMENTO = ['sancire', 'causa', 'previsione', 'giudizio', 'opinione', 'deresponsabilizzazione', 'giustificazione', 'contrapposizione', 'generalizzazione', 'commento', 'non risposta']
 
 class HyperionDataset(torch.utils.data.Dataset):
     

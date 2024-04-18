@@ -78,7 +78,7 @@ run["loss_plot"].upload(neptune.types.File.as_image(fig))
 
 
 #%%
-#hf_token = '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' # con nuovo profilo
+#hf_token = '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' # token modello Michele
 hf_token = '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'
 if config['save']:
     model.push_to_hub("BERT_DialogicaPD", use_temp_dir=True, token=hf_token)
