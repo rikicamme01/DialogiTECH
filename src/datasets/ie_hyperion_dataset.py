@@ -1,3 +1,4 @@
+#%%
 import string
 import re
 
@@ -173,3 +174,4 @@ def train_val_split(df, tok_name):
     train_df = train_df.reset_index(drop=True)
 
     return IEHyperionDataset(train_df, tok_name), IEHyperionDataset(val_df, tok_name)
+# %%

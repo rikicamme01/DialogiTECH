@@ -4,8 +4,14 @@ import sys
 import os
 import itertools
 sys.path.append(os.path.dirname(sys.path[0]))
+print(sys.path)
+#%%
+#sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+#sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from ast import literal_eval
+#from datasets.hyperion_dataset import encode_labels
 from datasets.ie_hyperion_dataset import find_word_bounds, clean_text
+
 
 df = pd.read_csv('../../data/processed/pipeline/test/ie_hyperion.csv', converters={'Stralci': literal_eval, 'Repertori': literal_eval})
 #df = df.head(50)

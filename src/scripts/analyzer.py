@@ -161,7 +161,7 @@ class Analyzer():
         df['Alternative'] = list_column_alt
         
         
-        
+        print(df)
         workbook = self.df_to_excel(df, threshold)
 
         #salvataggio/esporta file 
