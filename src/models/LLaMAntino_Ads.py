@@ -2,7 +2,7 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 from peft import prepare_model_for_kbit_training
 from peft import LoraConfig, get_peft_model
-from datasets import load_dataset
+from datasetss import load_dataset
 import transformers
 
 #%%

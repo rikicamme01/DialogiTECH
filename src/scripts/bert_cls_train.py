@@ -16,8 +16,8 @@ run = neptune.init_run(
 
 from transformers import AutoModelForSequenceClassification
 from transformers import AutoTokenizer
-from datasets.hyperion_dataset import HyperionDataset
-from datasets.hyperion_dataset import train_val_split
+from datasetss.hyperion_dataset import HyperionDataset
+from datasetss.hyperion_dataset import train_val_split
 from trainers.bert_cls_trainer import BertClsTrainer
 from utils.utils import seed_everything
 from utils.utils import plot_confusion_matrix, plot_f1, plot_loss

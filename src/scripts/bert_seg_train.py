@@ -19,7 +19,7 @@ from transformers import AutoTokenizer
 from utils.utils import plot_loss, seed_everything
 from loggers.neptune_logger import NeptuneLogger
 from trainers.bert_seg_trainer import BertSegTrainer
-from datasets.ie_hyperion_dataset import IEHyperionDataset, train_val_split
+from datasetss.ie_hyperion_dataset import IEHyperionDataset, train_val_split
 
 if len(sys.argv) != 2:
     print("ERROR:  config_file path not provided")

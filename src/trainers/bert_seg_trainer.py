@@ -11,7 +11,7 @@ from nltk.metrics.segmentation import windowdiff, ghd, pk
 import numpy as np
 
 from utils.utils import format_time
-from datasets.ie_hyperion_dataset import find_segmentation_by_bounds, find_word_bounds
+from datasetss.ie_hyperion_dataset import find_segmentation_by_bounds, find_word_bounds
 from models.bert_segmenter import decode_segmentation, split_by_prediction, extract_active_preds
 
 # This class is a wrapper for the training and testing of a Bert model for text segmentation

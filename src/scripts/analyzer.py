@@ -5,10 +5,10 @@ import os
 import itertools
 sys.path.append(os.path.dirname(sys.path[0]))
 from ast import literal_eval
-from datasets.ie_hyperion_dataset import find_word_bounds, clean_text
+from datasetss.ie_hyperion_dataset import find_word_bounds, clean_text
 from models.bert_segmenter import BertSegmenter
 from models.bert_rep import BertRep
-from datasets.hyperion_dataset import LABELS 
+from datasetss.hyperion_dataset import LABELS 
 from xlsxwriter import Workbook
 #%%
 class Analyzer():
@@ -159,9 +159,11 @@ class Analyzer():
 
         df['Repertorio'] = list_column_rep
         df['Alternative'] = list_column_alt
+
+        if 'Ads' not in df.columns:
+            df['Ads'] = ''
         
-        
-        print(df)
+
         workbook = self.df_to_excel(df, threshold)
 
         #salvataggio/esporta file 
